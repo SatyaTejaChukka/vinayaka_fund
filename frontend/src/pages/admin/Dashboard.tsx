@@ -320,7 +320,7 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={donForm.donor_name}
                   onChange={(e) => setDonForm({ ...donForm, donor_name: e.target.value })}
-                  placeholder="e.g. Suresh Kumar"
+                  placeholder="Enter donor name"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>
@@ -344,6 +344,7 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={donForm.upi_transaction_id}
                   onChange={(e) => setDonForm({ ...donForm, upi_transaction_id: e.target.value })}
+                  placeholder="Enter transaction or receipt ID"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono"
                 />
               </div>
@@ -354,7 +355,7 @@ export const AdminDashboard: React.FC = () => {
                   type="text"
                   value={donForm.description}
                   onChange={(e) => setDonForm({ ...donForm, description: e.target.value })}
-                  placeholder="e.g. Laddu prasadam sponsor"
+                  placeholder="Enter note or description"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>
@@ -402,7 +403,7 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={expForm.purpose}
                   onChange={(e) => setExpForm({ ...expForm, purpose: e.target.value })}
-                  placeholder="e.g. Flower Decoration & Lights"
+                  placeholder="Enter expense purpose"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>
@@ -426,7 +427,7 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={expForm.handled_by}
                   onChange={(e) => setExpForm({ ...expForm, handled_by: e.target.value })}
-                  placeholder="e.g. Suresh Kumar"
+                  placeholder="Enter person name"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>

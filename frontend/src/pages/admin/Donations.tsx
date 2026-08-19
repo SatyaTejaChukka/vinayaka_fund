@@ -248,7 +248,7 @@ export const AdminDonations: React.FC = () => {
                   required
                   value={voidReason}
                   onChange={(e) => setVoidReason(e.target.value)}
-                  placeholder="e.g. Duplicate entry / Bank chargeback"
+                  placeholder="Enter reason for voiding transaction"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>

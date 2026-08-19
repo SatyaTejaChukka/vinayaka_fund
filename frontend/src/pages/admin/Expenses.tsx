@@ -250,7 +250,7 @@ export const AdminExpenses: React.FC = () => {
                   required
                   value={expForm.purpose}
                   onChange={(e) => setExpForm({ ...expForm, purpose: e.target.value })}
-                  placeholder="e.g. Flower Decoration & Lights"
+                  placeholder="Enter expense purpose"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>
@@ -274,7 +274,7 @@ export const AdminExpenses: React.FC = () => {
                   required
                   value={expForm.handled_by}
                   onChange={(e) => setExpForm({ ...expForm, handled_by: e.target.value })}
-                  placeholder="e.g. Suresh Kumar"
+                  placeholder="Enter person name"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>
@@ -297,7 +297,7 @@ export const AdminExpenses: React.FC = () => {
                   type="text"
                   value={expForm.description}
                   onChange={(e) => setExpForm({ ...expForm, description: e.target.value })}
-                  placeholder="Vendor name or bill notes"
+                  placeholder="Enter vendor name or bill notes"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>
@@ -335,7 +335,7 @@ export const AdminExpenses: React.FC = () => {
                   required
                   value={voidReason}
                   onChange={(e) => setVoidReason(e.target.value)}
-                  placeholder="e.g. Vendor booking cancelled"
+                  placeholder="Enter reason for voiding expense"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm"
                 />
               </div>

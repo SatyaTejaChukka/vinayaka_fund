@@ -8,6 +8,7 @@ import { Navbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
 import { ProgressBar } from '../../components/ProgressBar';
 import { UPIPayModal } from '../../components/UPIPayModal';
+import { CashPayModal } from '../../components/CashPayModal';
 import { PrintableQRPoster } from '../../components/PrintableQRPoster';
 import { publicApi } from '../../services/api';
 import type { FundSummary, PublicDonation, PublicExpense } from '../../types';
@@ -22,6 +23,7 @@ export const PublicFund: React.FC = () => {
   const [error, setError] = useState<string>('');
 
   const [isDonateOpen, setIsDonateOpen] = useState<boolean>(false);
+  const [isCashOpen, setIsCashOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
 
@@ -93,6 +95,7 @@ export const PublicFund: React.FC = () => {
       <Navbar
         slug={fund.public_slug}
         onOpenDonateModal={() => setIsDonateOpen(true)}
+        onOpenCashModal={() => setIsCashOpen(true)}
         onOpenShareModal={() => setIsShareOpen(true)}
       />
 
@@ -345,6 +348,14 @@ export const PublicFund: React.FC = () => {
         fund={fund}
         isOpen={isDonateOpen}
         onClose={() => setIsDonateOpen(false)}
+        onSuccessSubmitted={fetchFundData}
+      />
+
+      {/* Cash Payment Modal */}
+      <CashPayModal
+        fund={fund}
+        isOpen={isCashOpen}
+        onClose={() => setIsCashOpen(false)}
         onSuccessSubmitted={fetchFundData}
       />
 

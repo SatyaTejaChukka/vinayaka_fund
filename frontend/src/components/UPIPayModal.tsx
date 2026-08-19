@@ -235,7 +235,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                     required
                     value={donorName}
                     onChange={(e) => setDonorName(e.target.value)}
-                    placeholder="e.g. Ravi Kumar"
+                    placeholder="Enter your name"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-amber-400 text-sm"
                   />
                 </div>
@@ -262,7 +262,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                     required
                     value={upiRefId}
                     onChange={(e) => setUpiRefId(e.target.value)}
-                    placeholder="e.g. 423981290312"
+                    placeholder="Enter the transaction ID"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-400 text-sm"
                   />
                 </div>
