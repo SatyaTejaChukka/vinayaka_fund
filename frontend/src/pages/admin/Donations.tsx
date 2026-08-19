@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { adminApi, publicApi } from '../../services/api';
 import type { AdminDonation } from '../../types';
@@ -103,12 +103,12 @@ export const AdminDonations: React.FC = () => {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           {['ALL', 'PENDING', 'VERIFIED', 'REJECTED', 'VOIDED'].map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs transition ${
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs shrink-0 active:scale-95 transition ${
                 activeFilter === filter
                   ? 'gold-button text-amber-950 shadow-md'
                   : 'bg-slate-900/60 text-slate-400 hover:text-white border border-slate-800'
@@ -120,9 +120,10 @@ export const AdminDonations: React.FC = () => {
           
           <button
             onClick={loadDonations}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition ml-2"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition shrink-0 active:scale-95 ml-auto sm:ml-2"
+            title="Refresh List"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
 
@@ -187,26 +188,28 @@ export const AdminDonations: React.FC = () => {
 
                     <td className="p-4 text-right space-x-2">
                       {d.status === 'PENDING' && (
-                        <>
+                        <div className="inline-flex items-center gap-1.5 justify-end">
                           <button
                             onClick={() => handleVerify(d.id)}
-                            className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px]"
+                            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-slate-950 font-extrabold hover:brightness-110 active:scale-95 transition text-xs shadow-sm flex items-center gap-1"
                           >
-                            Verify
+                            <CheckCircle2 className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+                            <span>Verify</span>
                           </button>
                           <button
                             onClick={() => handleReject(d.id)}
-                            className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40 hover:bg-rose-500/30 text-[11px]"
+                            className="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40 hover:bg-rose-500/30 active:scale-95 transition text-xs flex items-center gap-1"
                           >
-                            Reject
+                            <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                            <span>Reject</span>
                           </button>
-                        </>
+                        </div>
                       )}
 
                       {d.status === 'VERIFIED' && (
                         <button
                           onClick={() => setVoidingId(d.id)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-800 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 border border-slate-700 text-[11px] font-bold"
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 border border-slate-700 active:scale-95 transition text-xs font-bold"
                         >
                           Void Transaction
                         </button>

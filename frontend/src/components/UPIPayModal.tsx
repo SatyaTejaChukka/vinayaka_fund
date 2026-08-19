@@ -118,13 +118,13 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                   <label className="text-xs font-bold uppercase tracking-wider text-amber-300 block mb-2">
                     1. Select Donation Amount
                   </label>
-                  <div className="grid grid-cols-4 gap-2 mb-3">
+                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mb-3">
                     {[100, 200, 500, 1000].map((amt) => (
                       <button
                         key={amt}
                         type="button"
                         onClick={() => handlePresetClick(amt)}
-                        className={`py-2.5 rounded-xl font-bold text-sm transition border ${
+                        className={`py-2 sm:py-2.5 px-1 rounded-xl font-bold text-xs sm:text-sm transition border active:scale-95 ${
                           selectedAmount === amt
                             ? 'gold-button border-amber-400'
                             : 'bg-slate-900/60 border-slate-700 text-slate-200 hover:border-amber-500/40'
@@ -137,7 +137,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
 
                   {/* Custom Amount Input */}
                   <div className="relative">
-                    <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold">₹</span>
+                    <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold text-sm">₹</span>
                     <input
                       type="number"
                       value={customAmountStr}
@@ -146,48 +146,48 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                         setSelectedAmount(0);
                       }}
                       placeholder="Enter custom amount"
-                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 text-white font-bold focus:outline-none focus:border-amber-400 text-sm"
+                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 text-white font-bold focus:outline-none focus:border-amber-400 text-xs sm:text-sm"
                     />
                   </div>
                 </div>
 
                 {/* QR Code Container */}
-                <div className="p-5 rounded-2xl festive-glass-gold border border-amber-500/30 text-center flex flex-col items-center">
-                  <span className="text-xs font-bold text-amber-300 uppercase tracking-wider mb-3">
+                <div className="p-4 sm:p-5 rounded-2xl festive-glass-gold border border-amber-500/30 text-center flex flex-col items-center">
+                  <span className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-3">
                     2. Scan QR or Tap Pay Button
                   </span>
                   
-                  <div className="p-3 bg-white rounded-2xl shadow-inner mb-3">
+                  <div className="p-2.5 sm:p-3 bg-white rounded-2xl shadow-inner mb-3">
                     <QRCodeSVG
                       value={upiUri}
-                      size={170}
+                      size={150}
                       level="M"
                       includeMargin={false}
                     />
                   </div>
 
                   <p className="text-xs text-amber-200/90 font-medium mb-3">
-                    Paying: <span className="font-extrabold text-white text-base">₹{currentAmount.toLocaleString('en-IN')}</span>
+                    Paying: <span className="font-extrabold text-white text-sm sm:text-base">₹{currentAmount.toLocaleString('en-IN')}</span>
                   </p>
 
-                  {/* Direct Mobile Pay Button (Launches installed GPay / PhonePe / Paytm app) */}
+                  {/* Direct Mobile Pay Button */}
                   <a
                     href={upiUri}
-                    className="w-full py-3 px-4 rounded-xl font-extrabold bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 hover:brightness-110 shadow-lg flex items-center justify-center gap-2 text-xs uppercase tracking-wide transition border border-emerald-300/40 mb-3"
+                    className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-extrabold bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 hover:brightness-110 active:scale-[0.98] shadow-lg flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm uppercase tracking-wide transition border border-emerald-300/40 mb-3"
                   >
-                    <Smartphone className="w-4 h-4 text-slate-950" />
+                    <Smartphone className="w-4 h-4 text-slate-950 shrink-0" />
                     <span>Pay via UPI app</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-950" />
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-950 shrink-0" />
                   </a>
 
                   {/* UPI ID Copy Bar */}
-                  <div className="w-full p-2.5 rounded-xl bg-slate-950/80 border border-slate-700/60 flex items-center justify-between text-xs">
-                    <div className="truncate text-slate-300 font-mono">
+                  <div className="w-full p-2 sm:p-2.5 rounded-xl bg-slate-950/80 border border-slate-700/60 flex items-center justify-between text-xs gap-1">
+                    <div className="truncate text-slate-300 font-mono text-[11px] sm:text-xs">
                       UPI ID: <span className="font-bold text-amber-300">{fund.upi_id}</span>
                     </div>
                     <button
                       onClick={handleCopyUpi}
-                      className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 hover:bg-amber-500/30 transition flex items-center gap-1"
+                      className="px-2 sm:px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 hover:bg-amber-500/30 transition flex items-center gap-1 shrink-0 text-xs"
                     >
                       {copiedUpi ? (
                         <>
@@ -208,7 +208,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowSubmissionForm(true)}
-                  className="w-full py-3.5 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-base"
+                  className="w-full py-3 sm:py-3.5 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-xs sm:text-base active:scale-[0.98] transition"
                 >
                   <span>3. I Have Completed Payment ➔</span>
                 </button>

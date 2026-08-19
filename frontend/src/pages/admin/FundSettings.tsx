@@ -179,9 +179,9 @@ export const FundSettings: React.FC = () => {
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-3.5 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-sm shadow-xl pt-3"
+            className="w-full py-3 sm:py-3.5 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-xs sm:text-sm shadow-xl active:scale-[0.98] transition disabled:opacity-50"
           >
-            <Save className="w-4 h-4" />
+            <Save className="w-4 h-4 shrink-0" />
             <span>{saving ? 'Saving...' : 'Save Configuration Changes'}</span>
           </button>
         </form>

@@ -123,12 +123,12 @@ export const AdminExpenses: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           {['ALL', 'PENDING', 'SPENT', 'VOIDED'].map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs transition ${
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs shrink-0 active:scale-95 transition ${
                 activeFilter === filter
                   ? 'gold-button text-amber-950 shadow-md'
                   : 'bg-slate-900/60 text-slate-400 hover:text-white border border-slate-800'
@@ -140,9 +140,9 @@ export const AdminExpenses: React.FC = () => {
 
           <button
             onClick={() => setShowAddExpense(true)}
-            className="px-4 py-2 rounded-xl font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 text-xs flex items-center gap-1.5 ml-2"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 text-xs flex items-center gap-1.5 shrink-0 active:scale-95 ml-auto sm:ml-2"
           >
-            <PlusCircle className="w-4 h-4" />
+            <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             <span>+ Add Expense</span>
           </button>
         </div>

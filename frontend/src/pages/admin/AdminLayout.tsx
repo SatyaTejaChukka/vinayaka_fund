@@ -148,13 +148,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
 
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col overflow-x-hidden">
-        <header className="p-6 festive-glass border-b border-amber-500/10 flex items-center justify-between">
-          <h1 className="text-2xl font-extrabold text-white">
+        <header className="px-4 py-3 sm:px-6 sm:py-5 festive-glass border-b border-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h1 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight">
             {title}
           </h1>
-          <span className="text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            Admin Authenticated
+          <span className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold flex items-center gap-1 self-start sm:self-auto shrink-0">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>Admin Authenticated</span>
           </span>
         </header>
 

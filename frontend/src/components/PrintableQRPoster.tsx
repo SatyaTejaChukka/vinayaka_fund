@@ -99,19 +99,19 @@ export const PrintableQRPoster: React.FC<PrintableQRPosterProps> = ({
         </div>
 
         {/* Action Buttons for Screen */}
-        <div className="flex gap-3 mt-5 print:hidden">
+        <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-5 print:hidden">
           <button
             onClick={handleCopyLink}
-            className="w-1/2 py-3 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm flex items-center justify-center gap-2"
+            className="w-1/2 py-2.5 sm:py-3 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 active:scale-95 transition text-slate-200 text-xs sm:text-sm flex items-center justify-center gap-1.5"
           >
             {copiedLink ? (
               <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Link Copied</span>
+                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                <span>Copied</span>
               </>
             ) : (
               <>
-                <Copy className="w-4 h-4" />
+                <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Copy Link</span>
               </>
             )}
@@ -119,9 +119,9 @@ export const PrintableQRPoster: React.FC<PrintableQRPosterProps> = ({
 
           <button
             onClick={handlePrint}
-            className="w-1/2 py-3 rounded-xl font-bold gold-button text-sm flex items-center justify-center gap-2"
+            className="w-1/2 py-2.5 sm:py-3 rounded-xl font-bold gold-button active:scale-95 transition text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-lg"
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Print Flyer</span>
           </button>
         </div>

@@ -88,12 +88,12 @@ export const AdminLogin: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-sm shadow-xl mt-2"
+            className="w-full py-3 sm:py-3.5 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-xs sm:text-sm shadow-xl active:scale-[0.98] transition disabled:opacity-50 mt-2"
           >
             {loading ? 'Authenticating...' : (
               <>
                 <span>Enter Admin Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </>
             )}
           </button>

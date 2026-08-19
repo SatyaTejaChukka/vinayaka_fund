@@ -154,29 +154,29 @@ export const AdminDashboard: React.FC = () => {
           <p className="text-xs text-slate-400">UPI ID: <span className="font-mono text-amber-300">{fund.upi_id}</span></p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
           <button
             onClick={() => setShowAddDonation(true)}
-            className="px-4 py-2 rounded-xl text-xs font-bold gold-button flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold gold-button flex items-center justify-center gap-1.5 active:scale-95 transition"
           >
-            <PlusCircle className="w-4 h-4" />
-            <span>+ Add Donation</span>
+            <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span>+ Donation</span>
           </button>
 
           <button
             onClick={() => setShowAddExpense(true)}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition flex items-center justify-center gap-1.5 active:scale-95"
           >
-            <PlusCircle className="w-4 h-4" />
-            <span>+ Add Expense</span>
+            <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span>+ Expense</span>
           </button>
 
           <button
             onClick={loadData}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center justify-center shrink-0 active:scale-95"
             title="Refresh Data"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
@@ -224,73 +224,80 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Pending Donation Verification Queue */}
-      <div className="p-6 rounded-3xl festive-glass border border-amber-500/30 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-amber-400" />
-            <h3 className="text-lg font-bold text-white">
-              Pending Donation Verification Queue
+      <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/20 pb-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0" />
+            <h3 className="text-base sm:text-lg font-extrabold text-white">
+              Pending Verification Queue
             </h3>
-            <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
               {pendingDonations.length} Pending
             </span>
           </div>
 
-          <span className="text-xs text-slate-400">
-            Verify donor UPI details against bank credits
+          <span className="text-[11px] sm:text-xs text-slate-400">
+            Verify donor UPI details against bank statements
           </span>
         </div>
 
         {pendingDonations.length === 0 ? (
-          <div className="p-8 text-center bg-slate-900/50 rounded-2xl text-slate-400 text-sm border border-slate-800">
+          <div className="p-6 sm:p-8 text-center bg-slate-900/50 rounded-2xl text-slate-400 text-xs sm:text-sm border border-slate-800">
             ✓ All donor submissions have been verified! No pending items in queue.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {pendingDonations.map((d) => (
               <div
                 key={d.id}
-                className="p-4 rounded-2xl bg-slate-900/80 border border-amber-500/30 space-y-3 relative"
+                className="p-3.5 sm:p-4.5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-3 relative shadow-md"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="font-extrabold text-white text-base">
-                      {d.donor_name}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1.5 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-extrabold text-white text-sm sm:text-base truncate">
+                        {d.donor_name}
+                      </h4>
                       {!d.show_donor_name && (
-                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">Public Anonymous</span>
+                        <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0 font-medium">
+                          Public Anonymous
+                        </span>
                       )}
-                    </h4>
-                    <p className="text-xs text-slate-400">
-                      UPI Ref: <span className="font-mono font-bold text-amber-300">{d.upi_transaction_id || 'N/A'}</span>
-                    </p>
+                    </div>
+
+                    <div className="inline-flex items-center gap-1 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80 text-[11px] sm:text-xs font-mono text-amber-300">
+                      <span className="text-slate-400 font-sans">UPI Ref:</span>
+                      <span className="font-bold tracking-wide">{d.upi_transaction_id || 'N/A'}</span>
+                    </div>
                   </div>
 
-                  <span className="text-xl font-extrabold text-amber-400">
+                  <span className="text-lg sm:text-xl font-black text-gold-gradient shrink-0">
                     {formatINR(d.amount)}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800">
+                <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 pt-2 border-t border-slate-800/80 gap-2 flex-wrap">
                   <span>Submitted: {d.donation_date}</span>
-                  {d.description && <span className="italic truncate max-w-[180px]">{d.description}</span>}
+                  {d.description && <span className="italic truncate max-w-[160px] sm:max-w-[200px]">{d.description}</span>}
                 </div>
 
-                <div className="flex items-center gap-2 pt-2">
+                <div className="flex items-center gap-2 pt-1">
                   <button
                     disabled={processingId === d.id}
                     onClick={() => handleVerify(d.id)}
-                    className="w-1/2 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition flex items-center justify-center gap-1"
+                    className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-extrabold bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-slate-950 hover:brightness-110 active:scale-[0.98] transition shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Confirm & Verify</span>
+                    <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
+                    <span className="hidden sm:inline">Confirm & Verify</span>
+                    <span className="inline sm:hidden">Verify</span>
                   </button>
 
                   <button
                     disabled={processingId === d.id}
                     onClick={() => handleReject(d.id)}
-                    className="w-1/2 py-2 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition flex items-center justify-center gap-1"
+                    className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 active:scale-[0.98] transition flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
-                    <XCircle className="w-3.5 h-3.5" />
+                    <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
                     <span>Reject</span>
                   </button>
                 </div>
