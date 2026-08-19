@@ -89,3 +89,46 @@
 .diya-pulse {
   animation: diyaGlow 3s infinite ease-in-out;
 }
+
+/* Ganesha on Mooshika Vahana Running Animation */
+@keyframes mooshikaRun {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-6px) rotate(-4deg) scale(1.03);
+  }
+  40% {
+    transform: translateY(1px) rotate(1deg) scale(0.98);
+  }
+  60% {
+    transform: translateY(-7px) rotate(4deg) scale(1.05);
+  }
+  80% {
+    transform: translateY(1px) rotate(-1deg) scale(0.99);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.mooshika-runner-anim {
+  animation: mooshikaRun 0.45s infinite ease-in-out;
+  filter: drop-shadow(0 4px 14px rgba(255, 183, 3, 0.95));
+}
+
+/* Victory celebration pulse when Ganesha arrives at target */
+@keyframes victoryGlow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 12px rgba(255, 183, 3, 0.9));
+  }
+  50% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 25px rgba(255, 183, 3, 1)) drop-shadow(0 0 12px rgba(251, 133, 0, 0.8));
+  }
+}
+
+.victory-pulse {
+  animation: victoryGlow 2s infinite ease-in-out;
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface ProgressBarProps {
   collected: number;
@@ -13,6 +13,42 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   percentage,
   onBarClick
 }) => {
+  const [animatedPercentage, setAnimatedPercentage] = useState<number>(0);
+  const [displayPercentage, setDisplayPercentage] = useState<number>(0);
+
+  useEffect(() => {
+    // Reset to 0% and start realistic running journey after 400ms delay
+    setAnimatedPercentage(0);
+    setDisplayPercentage(0);
+
+    const startTimer = setTimeout(() => {
+      setAnimatedPercentage(percentage);
+
+      // Synchronize percentage counter numbers in real-time as Ganesha runs over 2400ms
+      const duration = 2400;
+      const startTime = performance.now();
+
+      const updateCounter = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        // Cubic ease out matching the CSS transition curve
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const currentVal = Math.round(easeProgress * percentage * 10) / 10;
+        setDisplayPercentage(currentVal);
+
+        if (progress < 1) {
+          requestAnimationFrame(updateCounter);
+        } else {
+          setDisplayPercentage(percentage);
+        }
+      };
+
+      requestAnimationFrame(updateCounter);
+    }, 400);
+
+    return () => clearTimeout(startTimer);
+  }, [percentage]);
+
   const formatINR = (val: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -20,6 +56,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       maximumFractionDigits: 0
     }).format(val);
   };
+
+  const currentFillPercent = Math.min(100, Math.max(0, animatedPercentage));
+  const runnerLeftPos = Math.min(96, Math.max(4, currentFillPercent));
 
   return (
     <div 
@@ -38,8 +77,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           </div>
 
           <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-gold-gradient">
-              {percentage}%
+            <span className="text-2xl sm:text-3xl font-black text-gold-gradient font-mono">
+              {displayPercentage}%
             </span>
           </div>
         </div>
@@ -60,16 +99,36 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         </div>
       </div>
 
-      {/* Outer Bar */}
-      <div className="w-full h-4 sm:h-5 rounded-full bg-slate-900/90 p-1 border border-amber-500/20 relative overflow-hidden">
-        {/* Animated Glow Fill Bar */}
+      {/* Progress Bar Container with Ganesha on Mooshika Runner */}
+      <div className="relative pt-14 sm:pt-16">
+        
+        {/* Animated Ganesha + Mooshika Mouse Runner Icon */}
         <div
-          className="h-full rounded-full transition-all duration-1000 ease-out progress-bar-glow"
-          style={{
-            width: `${Math.min(100, Math.max(5, percentage))}%`,
-            background: 'linear-gradient(90deg, #ffb703 0%, #fb8500 70%, #e63946 100%)'
-          }}
-        />
+          className="absolute top-0 -translate-x-1/2 flex flex-col items-center transition-all duration-[2400ms] cubic-bezier(0.25,1,0.5,1) z-10 pointer-events-none"
+          style={{ left: `${runnerLeftPos}%` }}
+        >
+          <div className="w-14 h-14 sm:w-20 sm:h-20 mooshika-runner-anim victory-pulse select-none">
+            <img
+              src="/progressBar.png"
+              alt="Lord Ganesha riding Mooshika Mouse"
+              className="w-full h-full object-contain filter drop-shadow-[0_4px_14px_rgba(255,183,3,0.95)]"
+            />
+          </div>
+          {/* Leading Edge Glow Pin */}
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_15px_#ffb703] -mt-1" />
+        </div>
+
+        {/* Outer Bar */}
+        <div className="w-full h-4 sm:h-5 rounded-full bg-slate-950/90 p-1 border border-amber-500/30 relative overflow-hidden shadow-inner">
+          {/* Animated Glow Fill Bar */}
+          <div
+            className="h-full rounded-full transition-all duration-[2400ms] cubic-bezier(0.25,1,0.5,1) progress-bar-glow"
+            style={{
+              width: `${Math.min(100, Math.max(3, currentFillPercent))}%`,
+              background: 'linear-gradient(90deg, #ffb703 0%, #fb8500 70%, #e63946 100%)'
+            }}
+          />
+        </div>
       </div>
 
       {onBarClick && (
