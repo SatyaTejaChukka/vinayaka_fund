@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-dark: #0d031b;
+    --card-bg: rgba(26, 11, 46, 0.75);
+    --gold-glow: rgba(255, 183, 3, 0.3);
+  }
+
+  body {
+    background-color: #0c0419;
+    color: #f8fafc;
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Festive Styling & Animations */
+.festive-bg {
+  background: radial-gradient(circle at 50% -20%, #3a155c 0%, #15062c 50%, #0a0216 100%);
+}
+
+.festive-glass {
+  background: rgba(25, 12, 44, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 183, 3, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.festive-glass-gold {
+  background: linear-gradient(135deg, rgba(255, 183, 3, 0.15) 0%, rgba(251, 133, 0, 0.05) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 183, 3, 0.4);
+  box-shadow: 0 0 25px rgba(255, 183, 3, 0.15);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #fff3b0 0%, #ffb703 50%, #fb8500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-button {
+  background: linear-gradient(135deg, #ffb703 0%, #fb8500 100%);
+  color: #0f051d;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(251, 133, 0, 0.4);
+  transition: all 0.2s ease-in-out;
+}
+
+.gold-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(255, 183, 3, 0.6);
+}
+
+/* Custom Glowing Progress Bar */
+.progress-bar-glow {
+  box-shadow: 0 0 15px rgba(255, 183, 3, 0.8), 0 0 30px rgba(251, 133, 0, 0.5);
+}
+
+/* Diya Pulse Animation */
+@keyframes diyaGlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 10px #ffb703);
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+    filter: drop-shadow(0 0 20px #fb8500);
+  }
+}
+
+.diya-pulse {
+  animation: diyaGlow 3s infinite ease-in-out;
+}

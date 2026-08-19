@@ -1,0 +1,78 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
+from app.core.database import engine, Base, SessionLocal
+from app.models import User, Fund
+from app.core.security import get_password_hash
+from app.routers import auth, public, admin_funds, admin_donations, admin_expenses, admin_audit
+
+# Initialize database tables
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    description="Vinayaka Chavithi Celebration Fund Transparency System API",
+    version="1.0.0"
+)
+
+# Enable CORS for local React development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.on_event("startup")
+def startup_db_seed():
+    db = SessionLocal()
+    try:
+        # Check if admin user exists
+        admin = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
+        if not admin:
+            admin = User(
+                name=settings.ADMIN_NAME,
+                email=settings.ADMIN_EMAIL,
+                password_hash=get_password_hash(settings.ADMIN_PASSWORD),
+                role="ADMIN",
+                is_active=True
+            )
+            db.add(admin)
+            db.commit()
+            print(f"Created default admin user: {settings.ADMIN_EMAIL}")
+
+        # Check if default fund exists
+        fund = db.query(Fund).filter(Fund.public_slug == "vinayaka-chavithi-2026").first()
+        if not fund:
+            fund = Fund(
+                name="Vinayaka Chavithi 2026",
+                year=2026,
+                description="Community Vinayaka Chavithi Celebration Fund Transparency Portal",
+                target_amount=100000.0,
+                upi_id="vinayaka@example",
+                upi_name="Vinayaka Chavithi Committee",
+                public_slug="vinayaka-chavithi-2026",
+                is_active=True
+            )
+            db.add(fund)
+            db.commit()
+            print("Created default fund: Vinayaka Chavithi 2026")
+    finally:
+        db.close()
+
+# Include Routers
+app.include_router(auth.router)
+app.include_router(public.router)
+app.include_router(admin_funds.router)
+app.include_router(admin_donations.router)
+app.include_router(admin_expenses.router)
+app.include_router(admin_audit.router)
+
+@app.get("/")
+def root():
+    return {
+        "message": "Welcome to Vinayaka Chavithi Fund Transparency API",
+        "docs_url": "/docs",
+        "public_slug": "vinayaka-chavithi-2026"
+    }
