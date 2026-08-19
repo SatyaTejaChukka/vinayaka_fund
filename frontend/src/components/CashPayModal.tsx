@@ -74,30 +74,34 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-lg festive-glass rounded-3xl border border-amber-500/30 p-5 sm:p-8 my-6 text-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+      <div className="relative w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] flex flex-col festive-glass rounded-3xl border border-amber-500/30 p-4 sm:p-6 text-white shadow-2xl overflow-hidden">
         
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/50 transition"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Sticky Top Header Bar with Close Button */}
+        <div className="sticky top-0 z-30 flex items-center justify-between pb-3 mb-3 border-b border-amber-500/20 bg-slate-950/90 -mt-1 -mx-1 px-2 pt-1 rounded-t-2xl backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <Banknote className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-base sm:text-lg font-extrabold text-gold-gradient">
+              Donate Cash to Committee
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 sm:p-2 text-slate-300 hover:text-white rounded-full bg-slate-800/80 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/40 transition shrink-0"
+            title="Close"
+          >
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
 
-        {!submittedSuccess ? (
-          <>
-            <div className="text-center mb-5">
-              <div className="inline-flex p-3 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-2">
-                <Banknote className="w-6 h-6" />
+        <div className="overflow-y-auto pr-1 flex-1 space-y-4">
+          {!submittedSuccess ? (
+            <>
+              <div className="text-center mb-4">
+                <p className="text-xs text-slate-300">
+                  Hand cash directly to committee organizers & register receipt details
+                </p>
               </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-gold-gradient">
-                Donate Cash to Committee
-              </h2>
-              <p className="text-xs text-slate-300 mt-1">
-                Hand cash directly to committee organizers & register receipt details
-              </p>
-            </div>
 
             <form onSubmit={handleSubmitCashDonation} className="space-y-4">
               {/* Preset Amounts */}
@@ -232,6 +236,7 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
             </button>
           </div>
         )}
+        </div>
 
       </div>
     </div>

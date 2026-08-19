@@ -40,21 +40,24 @@ export const PrintableQRPoster: React.FC<PrintableQRPosterProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto print:p-0 print:bg-white">
-      <div className="relative w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 my-8 text-white shadow-2xl print:shadow-none print:border-none print:p-0 print:bg-white print:text-black">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto print:p-0 print:bg-white">
+      <div className="relative w-full max-w-md max-h-[90vh] sm:max-h-[85vh] flex flex-col festive-glass rounded-3xl border border-amber-500/30 p-4 sm:p-5 text-white shadow-2xl overflow-hidden print:max-h-none print:shadow-none print:border-none print:p-0 print:bg-white print:text-black">
         
-        {/* Screen Controls */}
-        <div className="flex items-center justify-between mb-4 print:hidden">
-          <h3 className="text-lg font-bold text-gold-gradient flex items-center gap-2">
+        {/* Screen Controls Header */}
+        <div className="sticky top-0 z-30 flex items-center justify-between pb-3 mb-3 border-b border-amber-500/20 bg-slate-950/90 -mt-1 -mx-1 px-2 pt-1 rounded-t-2xl backdrop-blur-md print:hidden">
+          <h3 className="text-base sm:text-lg font-bold text-gold-gradient flex items-center gap-2">
             <span>🪔 Public Transparency Poster</span>
           </h3>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/50 transition"
+            className="p-1.5 sm:p-2 text-slate-300 hover:text-white rounded-full bg-slate-800/80 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/40 transition shrink-0"
+            title="Close Poster"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
+
+        <div className="overflow-y-auto pr-1 flex-1 space-y-3 print:overflow-visible">
 
         {/* Printable Poster Container */}
         <div 
@@ -124,6 +127,7 @@ export const PrintableQRPoster: React.FC<PrintableQRPosterProps> = ({
             <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Print Flyer</span>
           </button>
+        </div>
         </div>
 
       </div>
