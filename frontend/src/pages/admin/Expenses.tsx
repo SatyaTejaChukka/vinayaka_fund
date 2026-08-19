@@ -161,7 +161,7 @@ export const AdminExpenses: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[600px] text-left text-xs">
               <thead className="bg-slate-900/90 border-b border-amber-500/20 text-slate-300 uppercase tracking-wider font-extrabold">
                 <tr>
                   <th className="p-4">Purpose</th>

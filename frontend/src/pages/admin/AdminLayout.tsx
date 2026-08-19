@@ -60,40 +60,50 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
     <div className="min-h-screen festive-bg text-slate-100 flex flex-col md:flex-row">
       
       {/* Sidebar */}
-      <aside className="w-full md:w-64 md:h-screen md:sticky md:top-0 md:overflow-y-auto festive-glass border-r border-amber-500/20 p-5 flex flex-col justify-between shrink-0">
-        <div className="space-y-6">
+      <aside className="w-full md:w-64 md:h-screen md:sticky md:top-0 md:overflow-y-auto festive-glass border-b md:border-b-0 md:border-r border-amber-500/20 p-4 md:p-5 flex flex-col justify-between shrink-0">
+        <div className="space-y-3 md:space-y-6">
           
           {/* Admin Header Brand */}
-          <Link to="/admin/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full festive-glass-gold flex items-center justify-center text-xl diya-pulse">
-              🪔
-            </div>
-            <div>
-              <h2 className="font-extrabold text-sm text-gold-gradient">
-                VINAYAKA ADMIN
-              </h2>
-              <span className="text-[10px] text-amber-300/80 font-medium">
-                Committee Portal
-              </span>
-            </div>
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link to="/admin/dashboard" className="flex items-center gap-3">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-full festive-glass-gold flex items-center justify-center text-lg md:text-xl diya-pulse">
+                🪔
+              </div>
+              <div>
+                <h2 className="font-extrabold text-sm text-gold-gradient">
+                  VINAYAKA ADMIN
+                </h2>
+                <span className="text-[10px] text-amber-300/80 font-medium">
+                  Committee Portal
+                </span>
+              </div>
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              className="md:hidden p-2 rounded-xl text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 transition"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
 
           {/* Nav Links */}
-          <nav className="space-y-1">
+          <nav className="flex flex-row overflow-x-auto md:flex-col gap-1.5 md:gap-1 md:space-y-1 pb-1 md:pb-0">
             {navLinks.map((link) => {
               const active = location.pathname === link.path;
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-bold text-xs transition ${
+                  className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-xl font-bold text-xs shrink-0 transition ${
                     active
                       ? 'gold-button text-amber-950 shadow-md'
                       : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
                   }`}
                 >
                   {link.icon}
-                  <span>{link.name}</span>
+                  <span className="whitespace-nowrap">{link.name}</span>
                 </Link>
               );
             })}
@@ -102,7 +112,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
         </div>
 
         {/* User Info & Actions */}
-        <div className="pt-6 border-t border-amber-500/10 space-y-3">
+        <div className="pt-4 md:pt-6 border-t border-amber-500/10 space-y-3 hidden md:block">
           <a
             href="/fund/vinayaka-chavithi-2026"
             target="_blank"

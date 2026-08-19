@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
-  Heart, ArrowUpRight, ArrowDownLeft, ShieldCheck, 
-  Wallet, RefreshCw, CheckCircle2, Layers, Calendar
+  Heart, ArrowUpRight, ArrowDownLeft, 
+  Wallet, CheckCircle2, Layers, Calendar
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
@@ -88,7 +88,7 @@ export const PublicFund: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen festive-bg text-slate-100 flex flex-col pb-16">
+    <div className="min-h-screen festive-bg text-slate-100 flex flex-col pb-16 overflow-x-hidden w-full">
       {/* Top Navbar */}
       <Navbar
         slug={fund.public_slug}
@@ -96,39 +96,23 @@ export const PublicFund: React.FC = () => {
         onOpenShareModal={() => setIsShareOpen(true)}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8 flex-grow">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 space-y-6 sm:space-y-8 flex-grow min-w-0">
         
         {/* Hero Header */}
-        <section className="text-center space-y-3 relative">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full festive-glass-gold border border-amber-500/30 text-xs font-bold text-amber-300 uppercase tracking-widest">
-            <span className="diya-pulse">🪔</span>
-            <span>Official Community Transparency Dashboard</span>
+        <section className="text-center space-y-3 relative max-w-full overflow-hidden px-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full festive-glass-gold border border-amber-500/30 text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider max-w-full">
+            <span className="diya-pulse shrink-0">🪔</span>
+            <span className="truncate">Official Transparency Dashboard</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+          <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight break-words">
             {fund.name}
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
+          <p className="text-xs sm:text-base text-slate-300 max-w-2xl mx-auto">
             {fund.description || 'Every rupee collected and every rupee spent is visible to the public.'}
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-amber-300/90 pt-2">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Verified Accounts
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Heart className="w-4 h-4 text-rose-400" />
-              Zero Commission Direct UPI
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <RefreshCw className="w-4 h-4 text-indigo-400" />
-              Real-time Calculations
-            </span>
-          </div>
         </section>
 
         {/* Collection Target Progress Bar */}
@@ -175,12 +159,12 @@ export const PublicFund: React.FC = () => {
         </section>
 
         {/* Fund Utilization Progress & Breakdown */}
-        <section className="p-6 rounded-2xl festive-glass border border-amber-500/20 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+        <section className="p-4 sm:p-6 rounded-2xl festive-glass border border-amber-500/20 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-center">
           <div className="lg:col-span-2 space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-400">
               Fund Utilization Efficiency
             </span>
-            <h3 className="text-xl font-bold text-white">
+            <h3 className="text-lg sm:text-xl font-bold text-white">
               {formatINR(fund.total_spent)} spent from {formatINR(fund.total_collected)} collected
             </h3>
             <p className="text-xs text-slate-300">
@@ -195,10 +179,10 @@ export const PublicFund: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 sm:gap-3 justify-center">
             <button
               onClick={() => setIsDonateOpen(true)}
-              className="py-3.5 px-6 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-sm shadow-xl"
+              className="py-3 px-5 sm:py-3.5 sm:px-6 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-xs sm:text-sm shadow-xl"
             >
               <Heart className="w-4 h-4 fill-amber-950" />
               <span>Donate via UPI QR</span>
@@ -206,7 +190,7 @@ export const PublicFund: React.FC = () => {
 
             <button
               onClick={() => setIsShareOpen(true)}
-              className="py-3 px-6 rounded-xl font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-sm flex items-center justify-center gap-2 transition"
+              className="py-2.5 px-5 sm:py-3 sm:px-6 rounded-xl font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs sm:text-sm flex items-center justify-center gap-2 transition"
             >
               <Layers className="w-4 h-4" />
               <span>Get Shareable Flyer QR</span>
@@ -215,37 +199,37 @@ export const PublicFund: React.FC = () => {
         </section>
 
         {/* Tabbed Transaction Register */}
-        <section id="donations-section" className="p-6 rounded-3xl festive-glass border border-amber-500/30 space-y-6">
+        <section id="donations-section" className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 sm:space-y-6">
           
           {/* Tab Selector */}
-          <div className="flex items-center justify-between border-b border-amber-500/20 pb-4 flex-wrap gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between border-b border-amber-500/20 pb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
               <button
                 onClick={() => setActiveTab('donations')}
-                className={`px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 ${
+                className={`px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 ${
                   activeTab === 'donations'
                     ? 'gold-button text-amber-950 shadow-lg'
                     : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-700/60'
                 }`}
               >
-                <ArrowUpRight className="w-4 h-4" />
+                <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Verified Donations ({donations.length})</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('expenses')}
-                className={`px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 ${
+                className={`px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1.5 ${
                   activeTab === 'expenses'
                     ? 'gold-button text-amber-950 shadow-lg'
                     : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-700/60'
                 }`}
               >
-                <ArrowDownLeft className="w-4 h-4" />
-                <span>Expenses Breakdown ({expenses.length})</span>
+                <ArrowDownLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Expenses ({expenses.length})</span>
               </button>
             </div>
 
-            <span className="text-xs text-slate-400 font-medium">
+            <span className="text-[10px] sm:text-xs text-slate-400 font-medium">
               Only verified transactions are publicly listed
             </span>
           </div>
