@@ -53,6 +53,13 @@ export const adminApi = {
     }
     return res.data;
   },
+  register: async (name: string, email: string, password: string): Promise<{ access_token: string }> => {
+    const res = await api.post('/api/auth/register', { name, email, password });
+    if (res.data.access_token) {
+      localStorage.setItem('admin_token', res.data.access_token);
+    }
+    return res.data;
+  },
   logout: () => {
     localStorage.removeItem('admin_token');
   },
