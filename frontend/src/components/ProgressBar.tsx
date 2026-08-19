@@ -26,28 +26,37 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       onClick={onBarClick}
       className={`p-4 sm:p-6 rounded-2xl festive-glass border border-amber-500/30 ${onBarClick ? 'cursor-pointer hover:border-amber-400/50' : ''} transition shadow-xl`}
     >
-      <div className="flex flex-row items-center justify-between mb-2 sm:mb-3 gap-2">
-        <div>
-          <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-wider text-amber-400">
-            Fund Collection Progress
-          </span>
-          <div className="flex items-baseline gap-1.5 sm:gap-2 mt-0.5 sm:mt-1 flex-wrap">
-            <span className="text-xl sm:text-3xl font-extrabold text-white">
-              {formatINR(collected)}
+      <div className="flex flex-row items-end justify-between mb-2.5 sm:mb-3 gap-2">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-wider text-amber-400">
+              Fund Collection Progress
             </span>
-            <span className="text-xs sm:text-sm font-semibold text-slate-400">
-              of {formatINR(target)} target
+            <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Live
+            </span>
+          </div>
+
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <span className="text-2xl sm:text-3xl font-black text-gold-gradient">
+              {percentage}%
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <span className="text-xl sm:text-2xl font-black text-gold-gradient">
-            {percentage}%
+        {/* Right side Amount (Collected / Target) */}
+        <div className="text-right shrink-0">
+          <span className="text-[10px] sm:text-xs text-slate-400 block font-medium">
+            Raised of Target
           </span>
-          <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-            Live
-          </span>
+          <div className="flex items-baseline justify-end gap-1 sm:gap-1.5 mt-0.5">
+            <span className="text-lg sm:text-2xl font-bold text-slate-300">
+              {formatINR(collected)}
+            </span>
+            <span className="text-lg sm:text-xl font-bold text-amber-400">
+              / {formatINR(target)}
+            </span>
+          </div>
         </div>
       </div>
 
