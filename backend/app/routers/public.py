@@ -47,7 +47,8 @@ def get_public_verified_donations(slug: str, db: Session = Depends(get_db)):
             amount=d.amount,
             donation_date=d.donation_date,
             status=d.status,
-            show_donor_name=d.show_donor_name
+            show_donor_name=d.show_donor_name,
+            student_year=d.student_year
         ))
     return result
 
@@ -75,7 +76,8 @@ def submit_donation(slug: str, donation_in: DonationSubmit, db: Session = Depend
         upi_transaction_id=donation_in.upi_transaction_id,
         description=donation_in.description,
         status="PENDING",
-        show_donor_name=donation_in.show_donor_name
+        show_donor_name=donation_in.show_donor_name,
+        student_year=donation_in.student_year
     )
 
     db.add(new_donation)
@@ -88,7 +90,8 @@ def submit_donation(slug: str, donation_in: DonationSubmit, db: Session = Depend
         amount=new_donation.amount,
         donation_date=new_donation.donation_date,
         status=new_donation.status,
-        show_donor_name=new_donation.show_donor_name
+        show_donor_name=new_donation.show_donor_name,
+        student_year=new_donation.student_year
     )
 
 @router.get("/{slug}/qr")

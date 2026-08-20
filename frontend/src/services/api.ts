@@ -39,6 +39,7 @@ export const publicApi = {
     upi_transaction_id: string;
     description?: string;
     show_donor_name: boolean;
+    student_year?: string;
   }): Promise<PublicDonation> => {
     const res = await api.post(`/api/public/funds/${slug}/donations/submit`, data);
     return res.data;

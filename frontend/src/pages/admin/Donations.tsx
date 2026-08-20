@@ -157,7 +157,14 @@ export const AdminDonations: React.FC = () => {
                   <tr key={d.id} className="hover:bg-slate-900/40 transition">
                     <td className="p-4">
                       <div className="font-bold text-white text-sm">{d.donor_name}</div>
-                      {d.description && <div className="text-[11px] text-slate-400">{d.description}</div>}
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        {d.student_year && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                            🎓 {d.student_year}
+                          </span>
+                        )}
+                        {d.description && <span className="text-[11px] text-slate-400">{d.description}</span>}
+                      </div>
                     </td>
 
                     <td className="p-4 font-extrabold text-amber-400 text-sm">

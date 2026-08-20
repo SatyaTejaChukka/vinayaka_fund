@@ -30,6 +30,7 @@ export interface PublicDonation {
   donation_date: string;
   status: string;
   show_donor_name: boolean;
+  student_year?: string;
 }
 
 export interface AdminDonation {
@@ -43,6 +44,7 @@ export interface AdminDonation {
   description?: string;
   status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'VOIDED';
   show_donor_name: boolean;
+  student_year?: string;
   created_at: string;
   updated_at: string;
   verified_at?: string;

@@ -251,11 +251,18 @@ export const PublicFund: React.FC = () => {
                       key={d.id}
                       className="p-4 rounded-2xl bg-slate-900/70 border border-amber-500/20 hover:border-amber-500/40 transition space-y-2 relative overflow-hidden"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-white text-sm sm:text-base break-words pr-2">
-                          {d.donor_name}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 flex items-center gap-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="font-bold text-white text-sm sm:text-base break-words pr-2 block">
+                            {d.donor_name}
+                          </span>
+                          {d.student_year && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 inline-block mt-1">
+                              🎓 {d.student_year}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 flex items-center gap-1 shrink-0">
                           <CheckCircle2 className="w-3 h-3" />
                           Verified
                         </span>

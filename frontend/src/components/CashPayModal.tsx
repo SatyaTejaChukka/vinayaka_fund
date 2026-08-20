@@ -19,6 +19,7 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
 }) => {
   const [amountStr, setAmountStr] = useState<string>('500');
   const [donorName, setDonorName] = useState<string>('');
+  const [studentYear, setStudentYear] = useState<string>('');
   const [handedTo, setHandedTo] = useState<string>('');
   const [donationDate, setDonationDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [showPublic, setShowPublic] = useState<boolean>(true);
@@ -41,6 +42,10 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
       setErrorMsg('Please enter your name');
       return;
     }
+    if (!studentYear) {
+      setErrorMsg('Please select your studying year (1st, 2nd, 3rd, or 4th Year)');
+      return;
+    }
     if (currentAmount <= 0) {
       setErrorMsg('Please enter a valid cash donation amount');
       return;
@@ -55,6 +60,7 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
         donation_date: donationDate,
         upi_transaction_id: `CASH-${Date.now().toString().slice(-6)}`,
         show_donor_name: showPublic,
+        student_year: studentYear,
         description: handedTo.trim() ? `Direct Cash Handover (${handedTo.trim()})` : 'Direct Cash Handover'
       });
 
@@ -151,6 +157,34 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
                     placeholder="Enter your name"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                   />
+                </div>
+
+                {/* Academic Year Checklist / Role Selection */}
+                <div>
+                  <label className="text-xs font-bold text-amber-300 block mb-1.5">
+                    Select Studying Year / Role *
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    {[
+                      { label: '1st Year (I)', short: '1st Year (I)' },
+                      { label: '2nd Year (II)', short: '2nd Year (II)' },
+                      { label: '3rd Year (III)', short: '3rd Year (III)' },
+                      { label: '4th Year (IV)', short: '4th Year (IV)' },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => setStudentYear(item.label)}
+                        className={`py-2 px-1 rounded-xl font-bold text-xs transition border active:scale-95 text-center ${
+                          studentYear === item.label
+                            ? 'gold-button text-amber-950 border-amber-400 shadow-md'
+                            : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-amber-500/40'
+                        }`}
+                      >
+                        {item.short}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

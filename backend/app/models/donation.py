@@ -22,5 +22,6 @@ class Donation(Base):
     verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     void_reason = Column(String, nullable=True)
 
+    student_year = Column(String, nullable=True)  # e.g., "1st Year (I)", "2nd Year (II)", "3rd Year (III)", "4th Year (IV)", "Faculty / Other"
     fund = relationship("Fund", back_populates="donations")
     verifier = relationship("User", foreign_keys=[verified_by])

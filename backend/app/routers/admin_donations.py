@@ -46,6 +46,7 @@ def create_manual_donation(
         description=donation_in.description,
         status=donation_in.status,
         show_donor_name=donation_in.show_donor_name,
+        student_year=donation_in.student_year,
         verified_at=datetime.utcnow() if donation_in.status == "VERIFIED" else None,
         verified_by=current_admin.id if donation_in.status == "VERIFIED" else None
     )
