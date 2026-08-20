@@ -36,6 +36,9 @@ def get_fund(fund_id: int, db: Session = Depends(get_db), current_admin: User = 
         raise HTTPException(status_code=404, detail="Fund not found")
     return fund
 
+from app.models.donation import Donation
+from app.models.expense import Expense
+
 @router.put("/{fund_id}", response_model=FundResponse)
 def update_fund(fund_id: int, fund_in: FundUpdate, db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
     fund = db.query(Fund).filter(Fund.id == fund_id).first()
@@ -53,3 +56,28 @@ def update_fund(fund_id: int, fund_in: FundUpdate, db: Session = Depends(get_db)
 
     log_action(db, action="UPDATE", entity_type="FUND", entity_id=fund.id, user_id=current_admin.id, old_data=old_data, new_data=update_data)
     return fund
+
+@router.post("/{fund_id}/clear-test-data")
+def clear_fund_test_data(fund_id: int, db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
+    fund = db.query(Fund).filter(Fund.id == fund_id).first()
+    if not fund:
+        raise HTTPException(status_code=404, detail="Fund not found")
+
+    donations_deleted = db.query(Donation).filter(Donation.fund_id == fund_id).delete()
+    expenses_deleted = db.query(Expense).filter(Expense.fund_id == fund_id).delete()
+    db.commit()
+
+    log_action(
+        db, 
+        action="RESET", 
+        entity_type="FUND_DATA", 
+        entity_id=fund.id, 
+        user_id=current_admin.id, 
+        new_data={"donations_deleted": donations_deleted, "expenses_deleted": expenses_deleted}
+    )
+
+    return {
+        "message": f"Successfully deleted {donations_deleted} donations and {expenses_deleted} expenses.",
+        "donations_deleted": donations_deleted,
+        "expenses_deleted": expenses_deleted
+    }

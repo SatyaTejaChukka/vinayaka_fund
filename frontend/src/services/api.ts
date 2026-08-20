@@ -75,6 +75,10 @@ export const adminApi = {
     const res = await api.put(`/api/admin/funds/${fundId}`, data);
     return res.data;
   },
+  clearTestData: async (fundId: number): Promise<{ message: string; donations_deleted: number; expenses_deleted: number }> => {
+    const res = await api.post(`/api/admin/funds/${fundId}/clear-test-data`);
+    return res.data;
+  },
   getAdminDonations: async (fundId: number, status?: string): Promise<AdminDonation[]> => {
     const url = `/api/admin/funds/${fundId}/donations` + (status ? `?status=${status}` : '');
     const res = await api.get(url);
