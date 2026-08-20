@@ -1,7 +1,7 @@
 import io
 import qrcode
 from urllib.parse import quote
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -14,6 +14,7 @@ from app.schemas.summary import PublicFundSummary
 from app.schemas.donation import DonationSubmit, PublicDonationResponse
 from app.schemas.expense import PublicExpenseResponse
 from app.services.fund_service import calculate_fund_summary
+from app.services.email_service import send_donation_notification_email
 
 router = APIRouter(prefix="/api/public/funds", tags=["Public Transparency"])
 
@@ -63,7 +64,12 @@ def get_public_expenses(slug: str, db: Session = Depends(get_db)):
     return expenses
 
 @router.post("/{slug}/donations/submit", response_model=PublicDonationResponse)
-def submit_donation(slug: str, donation_in: DonationSubmit, db: Session = Depends(get_db)):
+def submit_donation(
+    slug: str,
+    donation_in: DonationSubmit,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     fund = get_fund_by_slug(slug, db)
 
     pm = "CASH" if donation_in.upi_transaction_id and donation_in.upi_transaction_id.startswith("CASH-") else "UPI"
@@ -83,6 +89,19 @@ def submit_donation(slug: str, donation_in: DonationSubmit, db: Session = Depend
     db.add(new_donation)
     db.commit()
     db.refresh(new_donation)
+
+    # Queue instant notification email to satyateja671@gmail.com
+    background_tasks.add_task(
+        send_donation_notification_email,
+        donor_name=new_donation.donor_name,
+        amount=new_donation.amount,
+        payment_method=pm,
+        upi_transaction_id=new_donation.upi_transaction_id,
+        donation_date=new_donation.donation_date,
+        student_year=new_donation.student_year,
+        show_donor_name=new_donation.show_donor_name,
+        description=new_donation.description
+    )
 
     return PublicDonationResponse(
         id=new_donation.id,
