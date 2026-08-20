@@ -107,26 +107,78 @@ def send_donation_notification_email(
     msg.set_content(f"New Donation Submission: ₹{amount:,.2f} from {donor_name}. Ref ID: {upi_transaction_id}", charset='utf-8')
     msg.add_alternative(html_content, subtype='html', charset='utf-8')
 
+    # 1. Try Resend HTTPS API (Port 443 - 100% unrestricted on Render)
+    resend_api_key = os.getenv("RESEND_API_KEY", "").strip()
+    if resend_api_key:
+        try:
+            import urllib.request
+            import json
+            resend_from = os.getenv("RESEND_FROM_EMAIL", "Vinayaka Committee <onboarding@resend.dev>")
+            req_data = json.dumps({
+                "from": resend_from,
+                "to": [recipient],
+                "subject": subject,
+                "html": html_content
+            }).encode("utf-8")
+            
+            req = urllib.request.Request(
+                "https://api.resend.com/emails",
+                data=req_data,
+                headers={
+                    "Authorization": f"Bearer {resend_api_key}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "VinayakaFundApp/1.0"
+                }
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                print(f"[Email Notification (Resend HTTPS)] Successfully sent email to {recipient} (Status: {resp.status})")
+            return
+        except Exception as e:
+            print(f"[Email Notification (Resend HTTPS Error)] Failed to send via Resend: {e}")
+
+    # 2. Try Brevo HTTPS API (Port 443 - 100% unrestricted on Render)
+    brevo_api_key = os.getenv("BREVO_API_KEY", "").strip()
+    if brevo_api_key:
+        try:
+            import urllib.request
+            import json
+            req_data = json.dumps({
+                "sender": {"email": sender_email or "admin@vinayaka.org", "name": "Vinayaka Fund Committee"},
+                "to": [{"email": recipient}],
+                "subject": subject,
+                "htmlContent": html_content
+            }).encode("utf-8")
+            
+            req = urllib.request.Request(
+                "https://api.brevo.com/v3/smtp/email",
+                data=req_data,
+                headers={
+                    "api-key": brevo_api_key,
+                    "Content-Type": "application/json",
+                    "User-Agent": "VinayakaFundApp/1.0"
+                }
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                print(f"[Email Notification (Brevo HTTPS)] Successfully sent email to {recipient} (Status: {resp.status})")
+            return
+        except Exception as e:
+            print(f"[Email Notification (Brevo HTTPS Error)] Failed to send via Brevo: {e}")
+
+    # 3. Try Standard SMTP (Runs on local machines where ports 587/465 are open)
     try:
         if smtp_username and smtp_password:
             try:
-                if smtp_port == 465:
-                    with smtplib.SMTP_SSL(smtp_server, 465, timeout=15) as server:
-                        server.login(smtp_username, smtp_password)
-                        server.send_message(msg)
-                else:
-                    with smtplib.SMTP(smtp_server, 587, timeout=15) as server:
-                        server.starttls()
-                        server.login(smtp_username, smtp_password)
-                        server.send_message(msg)
-                print(f"[Email Notification] Successfully sent email to {recipient}")
-            except Exception as primary_err:
-                print(f"[Email Notification Warning] Primary port {smtp_port} failed ({primary_err}). Retrying via SSL Port 465...")
                 with smtplib.SMTP_SSL(smtp_server, 465, timeout=15) as server:
                     server.login(smtp_username, smtp_password)
                     server.send_message(msg)
-                print(f"[Email Notification] Successfully sent email via SSL Port 465 fallback to {recipient}")
+                print(f"[Email Notification] Successfully sent email via SSL Port 465 to {recipient}")
+            except Exception as ssl_err:
+                with smtplib.SMTP(smtp_server, 587, timeout=15) as server:
+                    server.starttls()
+                    server.login(smtp_username, smtp_password)
+                    server.send_message(msg)
+                print(f"[Email Notification] Successfully sent email via TLS Port 587 to {recipient}")
         else:
-            print(f"[Email Notification Notice] Simulated email to {recipient}: Donation ₹{amount} from {donor_name}. (Set SMTP_USERNAME & SMTP_PASSWORD in .env for live delivery)")
+            print(f"[Email Notification Notice] Simulated email to {recipient}: Donation ₹{amount} from {donor_name}. (Set RESEND_API_KEY, BREVO_API_KEY, or SMTP_USERNAME in environment variables for live delivery)")
     except Exception as e:
         print(f"[Email Notification Error] Failed to send email to {recipient}: {e}")
