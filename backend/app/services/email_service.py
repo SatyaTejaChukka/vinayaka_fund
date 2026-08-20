@@ -109,16 +109,23 @@ def send_donation_notification_email(
 
     try:
         if smtp_username and smtp_password:
-            if smtp_port == 465:
-                with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=15) as server:
+            try:
+                if smtp_port == 465:
+                    with smtplib.SMTP_SSL(smtp_server, 465, timeout=15) as server:
+                        server.login(smtp_username, smtp_password)
+                        server.send_message(msg)
+                else:
+                    with smtplib.SMTP(smtp_server, 587, timeout=15) as server:
+                        server.starttls()
+                        server.login(smtp_username, smtp_password)
+                        server.send_message(msg)
+                print(f"[Email Notification] Successfully sent email to {recipient}")
+            except Exception as primary_err:
+                print(f"[Email Notification Warning] Primary port {smtp_port} failed ({primary_err}). Retrying via SSL Port 465...")
+                with smtplib.SMTP_SSL(smtp_server, 465, timeout=15) as server:
                     server.login(smtp_username, smtp_password)
                     server.send_message(msg)
-            else:
-                with smtplib.SMTP(smtp_server, smtp_port, timeout=15) as server:
-                    server.starttls()
-                    server.login(smtp_username, smtp_password)
-                    server.send_message(msg)
-            print(f"[Email Notification] Successfully sent email to {recipient}")
+                print(f"[Email Notification] Successfully sent email via SSL Port 465 fallback to {recipient}")
         else:
             print(f"[Email Notification Notice] Simulated email to {recipient}: Donation ₹{amount} from {donor_name}. (Set SMTP_USERNAME & SMTP_PASSWORD in .env for live delivery)")
     except Exception as e:
