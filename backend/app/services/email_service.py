@@ -100,8 +100,8 @@ def send_donation_notification_email(
     msg['Subject'] = subject
     msg['From'] = SENDER_EMAIL
     msg['To'] = recipient
-    msg.set_content(f"New Donation Submission: ₹{amount:,.2f} from {donor_name}. Ref ID: {upi_transaction_id}")
-    msg.add_alternative(html_content, subtype='html')
+    msg.set_content(f"New Donation Submission: ₹{amount:,.2f} from {donor_name}. Ref ID: {upi_transaction_id}", charset='utf-8')
+    msg.add_alternative(html_content, subtype='html', charset='utf-8')
 
     try:
         if SMTP_USERNAME and SMTP_PASSWORD:
