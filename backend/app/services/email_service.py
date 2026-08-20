@@ -3,13 +3,7 @@ import smtplib
 from email.message import EmailMessage
 from datetime import date
 from typing import Optional
-
-NOTIFICATION_EMAIL = os.getenv("NOTIFICATION_EMAIL", "323103382011@gvpce.ac.in")
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", SMTP_USERNAME or "satyateja671@gmail.com")
+from dotenv import load_dotenv
 
 def send_donation_notification_email(
     donor_name: str,
@@ -25,7 +19,16 @@ def send_donation_notification_email(
     """
     Sends an instant email notification to administrator when a donor submits a donation form.
     """
-    recipient = target_email.strip() if target_email and target_email.strip() else NOTIFICATION_EMAIL
+    load_dotenv()
+    
+    default_notification_email = os.getenv("NOTIFICATION_EMAIL", "323103382011@gvpce.ac.in")
+    smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_username = os.getenv("SMTP_USERNAME", "").strip()
+    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
+    sender_email = os.getenv("SENDER_EMAIL", "").strip() or smtp_username or "satyateja671@gmail.com"
+
+    recipient = target_email.strip() if target_email and target_email.strip() else default_notification_email
     subject = f"🪔 New Donation Submission: ₹{amount:,.2f} from {donor_name}"
     
     html_content = f"""
@@ -98,16 +101,16 @@ def send_donation_notification_email(
 
     msg = EmailMessage()
     msg['Subject'] = subject
-    msg['From'] = SENDER_EMAIL
+    msg['From'] = sender_email
     msg['To'] = recipient
     msg.set_content(f"New Donation Submission: ₹{amount:,.2f} from {donor_name}. Ref ID: {upi_transaction_id}", charset='utf-8')
     msg.add_alternative(html_content, subtype='html', charset='utf-8')
 
     try:
-        if SMTP_USERNAME and SMTP_PASSWORD:
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+        if smtp_username and smtp_password:
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=10) as server:
                 server.starttls()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.login(smtp_username, smtp_password)
                 server.send_message(msg)
             print(f"[Email Notification] Successfully sent email to {recipient}")
         else:

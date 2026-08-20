@@ -1,8 +1,11 @@
 from datetime import datetime
+from dotenv import load_dotenv
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
+load_dotenv()
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal, get_db
 from app.models import User, Fund
