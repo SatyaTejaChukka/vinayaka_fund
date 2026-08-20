@@ -32,13 +32,15 @@ def startup_db_seed():
     db = SessionLocal()
     try:
         # Auto-migrate missing columns on startup (safe for PostgreSQL & SQLite)
-        try:
-            db.execute(text("ALTER TABLE donations ADD COLUMN IF NOT EXISTS student_year VARCHAR"))
-            db.execute(text("ALTER TABLE funds ADD COLUMN IF NOT EXISTS notification_email VARCHAR"))
-            db.commit()
-        except Exception as e:
-            db.rollback()
-            print(f"Migration note: {e}")
+        for migration_sql in [
+            "ALTER TABLE donations ADD COLUMN student_year VARCHAR",
+            "ALTER TABLE funds ADD COLUMN notification_email VARCHAR"
+        ]:
+            try:
+                db.execute(text(migration_sql))
+                db.commit()
+            except Exception:
+                db.rollback()
 
         # Check if admin user exists
         admin = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
