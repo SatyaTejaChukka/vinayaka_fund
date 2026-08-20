@@ -80,8 +80,8 @@ def root():
         "public_slug": "vinayaka-chavithi-2026"
     }
 
-@app.get("/health")
-@app.get("/api/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 def health_check(db: Session = Depends(get_db)):
     try:
         # Run lightweight SELECT 1 DB ping to keep both API & Database active
