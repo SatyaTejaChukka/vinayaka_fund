@@ -25,7 +25,8 @@ def send_donation_notification_email(
     smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_username = os.getenv("SMTP_USERNAME", "").strip()
-    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
+    raw_password = os.getenv("SMTP_PASSWORD", "")
+    smtp_password = raw_password.replace(" ", "").strip()
     sender_email = os.getenv("SENDER_EMAIL", "").strip() or smtp_username or "satyateja671@gmail.com"
 
     recipient = target_email.strip() if target_email and target_email.strip() else default_notification_email
@@ -108,12 +109,17 @@ def send_donation_notification_email(
 
     try:
         if smtp_username and smtp_password:
-            with smtplib.SMTP(smtp_server, smtp_port, timeout=10) as server:
-                server.starttls()
-                server.login(smtp_username, smtp_password)
-                server.send_message(msg)
+            if smtp_port == 465:
+                with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=15) as server:
+                    server.login(smtp_username, smtp_password)
+                    server.send_message(msg)
+            else:
+                with smtplib.SMTP(smtp_server, smtp_port, timeout=15) as server:
+                    server.starttls()
+                    server.login(smtp_username, smtp_password)
+                    server.send_message(msg)
             print(f"[Email Notification] Successfully sent email to {recipient}")
         else:
             print(f"[Email Notification Notice] Simulated email to {recipient}: Donation ₹{amount} from {donor_name}. (Set SMTP_USERNAME & SMTP_PASSWORD in .env for live delivery)")
     except Exception as e:
-        print(f"[Email Notification Error] Failed to send email: {e}")
+        print(f"[Email Notification Error] Failed to send email to {recipient}: {e}")
