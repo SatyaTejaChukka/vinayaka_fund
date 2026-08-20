@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from datetime import datetime
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from app.core.config import settings
-from app.core.database import engine, Base, SessionLocal
+from app.core.database import engine, Base, SessionLocal, get_db
 from app.models import User, Fund
 from app.core.security import get_password_hash
 from app.routers import auth, public, admin_funds, admin_donations, admin_expenses, admin_audit
@@ -74,5 +76,23 @@ def root():
     return {
         "message": "Welcome to Vinayaka Chavithi Fund Transparency API",
         "docs_url": "/docs",
+        "health_check": "/api/health",
         "public_slug": "vinayaka-chavithi-2026"
+    }
+
+@app.get("/health")
+@app.get("/api/health")
+def health_check(db: Session = Depends(get_db)):
+    try:
+        # Run lightweight SELECT 1 DB ping to keep both API & Database active
+        db.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
+    return {
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "database": db_status,
+        "timestamp": datetime.utcnow().isoformat(),
+        "message": "Vinayaka Chavithi API and Database active"
     }
