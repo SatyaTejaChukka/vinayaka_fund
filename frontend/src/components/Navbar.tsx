@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { QrCode, Banknote, HeartHandshake, LayoutDashboard } from 'lucide-react';
+import { LogoMark } from './LogoMark';
 
 interface NavbarProps {
   slug?: string;
@@ -26,8 +27,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         
         {/* Brand Logo & Title */}
         <Link to={`/fund/${slug}`} className="flex items-center gap-2 sm:gap-3 group min-w-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full festive-glass-gold flex items-center justify-center text-amber-400 text-lg sm:text-xl diya-pulse shrink-0">
-            🪔
+          <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center diya-pulse shrink-0">
+            <LogoMark className="w-full h-full" />
           </div>
           <div className="min-w-0 flex items-center gap-2">
             <span className="font-black text-sm sm:text-xl text-gold-gradient tracking-wide truncate">

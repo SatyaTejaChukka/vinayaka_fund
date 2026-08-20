@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, Printer, Copy, CheckCircle2 } from 'lucide-react';
 import type { FundSummary } from '../types';
+import { LogoMark } from './LogoMark';
 
 interface PrintableQRPosterProps {
   fund: FundSummary;
@@ -46,7 +47,8 @@ export const PrintableQRPoster: React.FC<PrintableQRPosterProps> = ({
         {/* Screen Controls Header */}
         <div className="sticky top-0 z-30 flex items-center justify-between pb-3 mb-3 border-b border-amber-500/20 bg-slate-950/90 -mt-1 -mx-1 px-2 pt-1 rounded-t-2xl backdrop-blur-md print:hidden">
           <h3 className="text-base sm:text-lg font-bold text-gold-gradient flex items-center gap-2">
-            <span>🪔 Public Transparency Poster</span>
+            <LogoMark className="w-5 h-5" />
+            <span>Public Transparency Poster</span>
           </h3>
           <button
             onClick={onClose}
@@ -64,7 +66,9 @@ export const PrintableQRPoster: React.FC<PrintableQRPosterProps> = ({
           ref={posterRef}
           className="p-6 rounded-2xl bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 border border-amber-500/40 text-center shadow-inner print:bg-white print:text-black print:border-2 print:border-black"
         >
-          <div className="text-4xl mb-2 diya-pulse">🪔</div>
+          <div className="w-20 h-20 mx-auto mb-2 diya-pulse">
+            <LogoMark className="w-full h-full" />
+          </div>
           <h1 className="text-2xl font-black tracking-wider text-amber-400 uppercase print:text-amber-600">
             {fund.name}
           </h1>

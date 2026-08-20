@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import type { User } from '../../types';
+import { LogoMark } from '../../components/LogoMark';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -48,7 +49,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
     return (
       <div className="min-h-screen festive-bg text-white flex items-center justify-center p-4">
         <div className="text-amber-300 font-bold text-sm animate-pulse flex items-center gap-2">
-          <span>🪔</span> Verifying Admin Access...
+          <LogoMark className="w-5 h-5" /> Verifying Admin Access...
         </div>
       </div>
     );
@@ -71,8 +72,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
         {/* Top Header Bar for Brand + Mobile Toggle */}
         <div className="flex items-center justify-between">
           <Link to="/admin/dashboard" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full festive-glass-gold flex items-center justify-center text-lg md:text-xl diya-pulse shrink-0">
-              🪔
+            <div className="w-11 h-11 md:w-12 md:h-12 flex items-center justify-center diya-pulse shrink-0">
+              <LogoMark className="w-full h-full" />
             </div>
             <div>
               <h2 className="font-extrabold text-sm text-gold-gradient tracking-tight">

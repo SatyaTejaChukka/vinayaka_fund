@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { X, Copy, CheckCircle2, Send, Smartphone, ExternalLink } from 'lucide-react';
 import { publicApi } from '../services/api';
 import type { FundSummary } from '../types';
+import { LogoMark } from './LogoMark';
 
 interface UPIPayModalProps {
   fund: FundSummary;
@@ -107,7 +108,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
         {/* Sticky Top Header Bar with Close Button */}
         <div className="sticky top-0 z-30 flex items-center justify-between pb-3 mb-3 border-b border-amber-500/20 bg-slate-950/90 -mt-1 -mx-1 px-2 pt-1 rounded-t-2xl backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <span className="text-xl diya-pulse">🪔</span>
+            <LogoMark className="w-7 h-7 diya-pulse" />
             <h2 className="text-base sm:text-lg font-extrabold text-gold-gradient">
               Donate by UPI
             </h2>

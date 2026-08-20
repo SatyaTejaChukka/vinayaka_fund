@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, User, ArrowRight, UserPlus } from 'lucide-react';
 import { adminApi } from '../../services/api';
+import { LogoMark } from '../../components/LogoMark';
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -42,8 +43,8 @@ export const AdminLogin: React.FC = () => {
       <div className="w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 sm:p-8 text-white shadow-2xl space-y-5">
         
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-full festive-glass-gold flex items-center justify-center text-2xl diya-pulse mx-auto mb-1">
-            🪔
+          <div className="w-17 h-17 sm:w-18 sm:h-18 flex items-center justify-center diya-pulse mx-auto mb-1">
+            <LogoMark className="w-full h-full" />
           </div>
           <h1 className="text-2xl font-extrabold text-gold-gradient">
             {isRegister ? 'Create Committee Account' : 'Committee Admin Login'}

@@ -10,6 +10,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { UPIPayModal } from '../../components/UPIPayModal';
 import { CashPayModal } from '../../components/CashPayModal';
 import { PrintableQRPoster } from '../../components/PrintableQRPoster';
+import { LogoMark } from '../../components/LogoMark';
 import { publicApi } from '../../services/api';
 import type { FundSummary, PublicDonation, PublicExpense } from '../../types';
 
@@ -61,8 +62,8 @@ export const PublicFund: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen festive-bg text-white flex flex-col items-center justify-center p-4">
-        <div className="w-16 h-16 rounded-full festive-glass-gold flex items-center justify-center text-4xl diya-pulse mb-4">
-          🪔
+        <div className="w-18 h-18 flex items-center justify-center diya-pulse mb-4">
+          <LogoMark className="w-full h-full" />
         </div>
         <p className="text-amber-300 font-bold animate-pulse text-lg">
           Loading Vinayaka Chavithi Transparency Portal...
@@ -104,7 +105,7 @@ export const PublicFund: React.FC = () => {
         {/* Hero Header */}
         <section className="text-center space-y-3 relative max-w-full overflow-hidden px-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full festive-glass-gold border border-amber-500/30 text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider max-w-full">
-            <span className="diya-pulse shrink-0">🪔</span>
+            <LogoMark className="w-5 h-5 diya-pulse shrink-0" />
             <span className="truncate">Official Transparency Dashboard</span>
           </div>
 
@@ -347,7 +348,10 @@ export const PublicFund: React.FC = () => {
 
       {/* Footer */}
       <footer className="mt-16 text-center text-xs text-slate-500 py-6 border-t border-amber-500/10">
-        <p>🪔 Vinayaka Chavithi Fund Transparency Portal • Built for Zero-Commission Community Trust</p>
+        <p className="flex items-center justify-center gap-1.5">
+          <LogoMark className="w-4 h-4" />
+          <span>Vinayaka Chavithi Fund Transparency Portal • Built for Zero-Commission Community Trust</span>
+        </p>
       </footer>
 
       {/* UPI Payment Modal */}

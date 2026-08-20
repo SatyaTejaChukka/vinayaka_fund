@@ -101,6 +101,7 @@
 
 .diya-pulse {
   animation: diyaGlow 3s infinite ease-in-out;
+  font-size: 0;
 }
 
 /* Ganesha on Mooshika Vahana Running Animation */
