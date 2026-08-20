@@ -4,12 +4,12 @@ from email.message import EmailMessage
 from datetime import date
 from typing import Optional
 
-NOTIFICATION_EMAIL = os.getenv("NOTIFICATION_EMAIL", "satyateja671@gmail.com")
+NOTIFICATION_EMAIL = os.getenv("NOTIFICATION_EMAIL", "323103382011@gvpce.ac.in")
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", SMTP_USERNAME or "noreply@vinayaka-fund.org")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", SMTP_USERNAME or "satyateja671@gmail.com")
 
 def send_donation_notification_email(
     donor_name: str,
@@ -19,11 +19,13 @@ def send_donation_notification_email(
     donation_date: date,
     student_year: Optional[str] = None,
     show_donor_name: bool = True,
-    description: Optional[str] = None
+    description: Optional[str] = None,
+    target_email: Optional[str] = None
 ):
     """
-    Sends an instant email notification to satyateja671@gmail.com when a donor submits a donation form.
+    Sends an instant email notification to administrator when a donor submits a donation form.
     """
+    recipient = target_email.strip() if target_email and target_email.strip() else NOTIFICATION_EMAIL
     subject = f"🪔 New Donation Submission: ₹{amount:,.2f} from {donor_name}"
     
     html_content = f"""
@@ -97,7 +99,7 @@ def send_donation_notification_email(
     msg = EmailMessage()
     msg['Subject'] = subject
     msg['From'] = SENDER_EMAIL
-    msg['To'] = NOTIFICATION_EMAIL
+    msg['To'] = recipient
     msg.set_content(f"New Donation Submission: ₹{amount:,.2f} from {donor_name}. Ref ID: {upi_transaction_id}")
     msg.add_alternative(html_content, subtype='html')
 
@@ -107,8 +109,8 @@ def send_donation_notification_email(
                 server.starttls()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
-            print(f"[Email Notification] Successfully sent email to {NOTIFICATION_EMAIL}")
+            print(f"[Email Notification] Successfully sent email to {recipient}")
         else:
-            print(f"[Email Notification Notice] Simulated email to {NOTIFICATION_EMAIL}: Donation ₹{amount} from {donor_name}. (Set SMTP_USERNAME & SMTP_PASSWORD in .env for live delivery)")
+            print(f"[Email Notification Notice] Simulated email to {recipient}: Donation ₹{amount} from {donor_name}. (Set SMTP_USERNAME & SMTP_PASSWORD in .env for live delivery)")
     except Exception as e:
         print(f"[Email Notification Error] Failed to send email: {e}")

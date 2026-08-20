@@ -34,6 +34,7 @@ def startup_db_seed():
         # Auto-migrate missing columns on startup (safe for PostgreSQL & SQLite)
         try:
             db.execute(text("ALTER TABLE donations ADD COLUMN IF NOT EXISTS student_year VARCHAR"))
+            db.execute(text("ALTER TABLE funds ADD COLUMN IF NOT EXISTS notification_email VARCHAR"))
             db.commit()
         except Exception as e:
             db.rollback()

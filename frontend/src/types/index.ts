@@ -15,6 +15,7 @@ export interface FundSummary {
   expenses_count: number;
   upi_id: string;
   upi_name: string;
+  notification_email?: string;
   public_slug: string;
   start_date?: string;
   end_date?: string;

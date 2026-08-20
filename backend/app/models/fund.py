@@ -13,6 +13,7 @@ class Fund(Base):
     target_amount = Column(Float, nullable=False, default=100000.0)
     upi_id = Column(String, nullable=False, default="vinayaka@upi")
     upi_name = Column(String, nullable=False, default="Vinayaka Chavithi Committee")
+    notification_email = Column(String, nullable=True)
     public_slug = Column(String, unique=True, index=True, nullable=False)
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)

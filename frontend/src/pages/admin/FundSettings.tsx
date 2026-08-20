@@ -16,6 +16,7 @@ export const FundSettings: React.FC = () => {
     target_amount: 100000,
     upi_id: '',
     upi_name: '',
+    notification_email: '',
     public_slug: '',
     description: ''
   });
@@ -30,6 +31,7 @@ export const FundSettings: React.FC = () => {
         target_amount: data.target_amount,
         upi_id: data.upi_id,
         upi_name: data.upi_name,
+        notification_email: data.notification_email || '',
         public_slug: data.public_slug,
         description: data.description || ''
       });
@@ -184,6 +186,23 @@ export const FundSettings: React.FC = () => {
                   className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-amber-500/40 text-sm"
                 />
               </div>
+            </div>
+
+            {/* Admin Notification Receiver Email Setting */}
+            <div>
+              <label className="text-xs font-bold text-amber-300 block mb-1">
+                📧 Admin Notification Receiver Email
+              </label>
+              <input
+                type="email"
+                value={form.notification_email}
+                onChange={(e) => setForm({ ...form, notification_email: e.target.value })}
+                placeholder="e.g. 323103382011@gvpce.ac.in or satyateja671@gmail.com"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-amber-500/40 text-sm font-semibold text-white focus:outline-none focus:border-amber-400"
+              />
+              <span className="text-[11px] text-slate-400 block mt-1">
+                Whenever a donor submits a payment (UPI or Cash), instant notification details will be emailed to this address.
+              </span>
             </div>
 
             <div>

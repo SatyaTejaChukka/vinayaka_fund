@@ -90,7 +90,7 @@ def submit_donation(
     db.commit()
     db.refresh(new_donation)
 
-    # Queue instant notification email to satyateja671@gmail.com
+    # Queue instant notification email to administrator
     background_tasks.add_task(
         send_donation_notification_email,
         donor_name=new_donation.donor_name,
@@ -100,7 +100,8 @@ def submit_donation(
         donation_date=new_donation.donation_date,
         student_year=new_donation.student_year,
         show_donor_name=new_donation.show_donor_name,
-        description=new_donation.description
+        description=new_donation.description,
+        target_email=fund.notification_email
     )
 
     return PublicDonationResponse(
