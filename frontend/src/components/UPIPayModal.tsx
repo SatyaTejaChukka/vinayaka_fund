@@ -35,7 +35,14 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
   if (!isOpen) return null;
 
   const currentAmount = selectedAmount > 0 ? selectedAmount : parseFloat(customAmountStr) || 0;
-  const upiUri = `upi://pay?pa=${encodeURIComponent(fund.upi_id)}&pn=${encodeURIComponent(fund.upi_name)}&am=${currentAmount > 0 ? currentAmount.toFixed(2) : ''}&cu=INR&tn=${encodeURIComponent(fund.name + ' Donation')}`;
+  
+  // NPCI Compliant UPI Deep Link Construction (pa parameter requires literal '@')
+  const cleanUpiId = fund.upi_id.trim();
+  const cleanUpiName = encodeURIComponent(fund.upi_name.trim());
+  const cleanNote = encodeURIComponent(`${fund.name} Donation`.trim());
+  const amtStr = currentAmount > 0 ? currentAmount.toFixed(2) : '';
+
+  const upiUri = `upi://pay?pa=${cleanUpiId}&pn=${cleanUpiName}&am=${amtStr}&cu=INR&tn=${cleanNote}`;
 
   const handlePresetClick = (amount: number) => {
     setSelectedAmount(amount);
