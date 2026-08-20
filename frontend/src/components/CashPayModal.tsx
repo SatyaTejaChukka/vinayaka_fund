@@ -17,8 +17,7 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
   onClose,
   onSuccessSubmitted
 }) => {
-  const [amount, setAmount] = useState<number>(500);
-  const [customAmountStr, setCustomAmountStr] = useState<string>('500');
+  const [amountStr, setAmountStr] = useState<string>('500');
   const [donorName, setDonorName] = useState<string>('');
   const [handedTo, setHandedTo] = useState<string>('');
   const [donationDate, setDonationDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -29,11 +28,11 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentAmount = amount > 0 ? amount : parseFloat(customAmountStr) || 0;
+  const parsedAmt = parseFloat(amountStr);
+  const currentAmount = !isNaN(parsedAmt) && parsedAmt > 0 ? parsedAmt : 0;
 
   const handlePresetClick = (presetAmt: number) => {
-    setAmount(presetAmt);
-    setCustomAmountStr(presetAmt.toString());
+    setAmountStr(presetAmt.toString());
   };
 
   const handleSubmitCashDonation = async (e: React.FormEvent) => {
@@ -116,7 +115,7 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
                       type="button"
                       onClick={() => handlePresetClick(presetAmt)}
                       className={`py-2 sm:py-2.5 px-1 rounded-xl font-bold text-xs sm:text-sm transition border active:scale-95 ${
-                        amount === presetAmt
+                        currentAmount === presetAmt
                           ? 'gold-button border-amber-400'
                           : 'bg-slate-900/60 border-slate-700 text-slate-200 hover:border-amber-500/40'
                       }`}
@@ -130,11 +129,8 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
                   <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold text-sm">₹</span>
                   <input
                     type="number"
-                    value={customAmountStr}
-                    onChange={(e) => {
-                      setCustomAmountStr(e.target.value);
-                      setAmount(0);
-                    }}
+                    value={amountStr}
+                    onChange={(e) => setAmountStr(e.target.value)}
                     placeholder="Enter custom cash amount"
                     className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 text-white font-bold focus:outline-none focus:border-amber-400 text-xs sm:text-sm"
                   />

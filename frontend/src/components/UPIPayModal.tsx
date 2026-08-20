@@ -18,8 +18,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
   onClose,
   onSuccessSubmitted
 }) => {
-  const [selectedAmount, setSelectedAmount] = useState<number>(500);
-  const [customAmountStr, setCustomAmountStr] = useState<string>('500');
+  const [amountStr, setAmountStr] = useState<string>('500');
   const [copiedUpi, setCopiedUpi] = useState<boolean>(false);
   const [showSubmissionForm, setShowSubmissionForm] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -34,7 +33,8 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentAmount = selectedAmount > 0 ? selectedAmount : parseFloat(customAmountStr) || 0;
+  const parsedAmt = parseFloat(amountStr);
+  const currentAmount = !isNaN(parsedAmt) && parsedAmt > 0 ? parsedAmt : 0;
   
   // NPCI Compliant UPI Deep Link Construction (pa parameter requires literal '@')
   const cleanUpiId = fund.upi_id.trim();
@@ -45,8 +45,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
   const upiUri = `upi://pay?pa=${cleanUpiId}&pn=${cleanUpiName}&am=${amtStr}&cu=INR&tn=${cleanNote}`;
 
   const handlePresetClick = (amount: number) => {
-    setSelectedAmount(amount);
-    setCustomAmountStr(amount.toString());
+    setAmountStr(amount.toString());
   };
 
   const handleCopyUpi = () => {
@@ -139,7 +138,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                         type="button"
                         onClick={() => handlePresetClick(amt)}
                         className={`py-2 sm:py-2.5 px-1 rounded-xl font-bold text-xs sm:text-sm transition border active:scale-95 ${
-                          selectedAmount === amt
+                          currentAmount === amt
                             ? 'gold-button border-amber-400'
                             : 'bg-slate-900/60 border-slate-700 text-slate-200 hover:border-amber-500/40'
                         }`}
@@ -154,11 +153,8 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                     <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold text-sm">₹</span>
                     <input
                       type="number"
-                      value={customAmountStr}
-                      onChange={(e) => {
-                        setCustomAmountStr(e.target.value);
-                        setSelectedAmount(0);
-                      }}
+                      value={amountStr}
+                      onChange={(e) => setAmountStr(e.target.value)}
                       placeholder="Enter custom amount"
                       className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 text-white font-bold focus:outline-none focus:border-amber-400 text-xs sm:text-sm"
                     />
@@ -261,8 +257,8 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                   <input
                     type="number"
                     required
-                    value={customAmountStr}
-                    onChange={(e) => setCustomAmountStr(e.target.value)}
+                    value={amountStr}
+                    onChange={(e) => setAmountStr(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white font-bold focus:outline-none focus:border-amber-400 text-sm"
                   />
                 </div>
