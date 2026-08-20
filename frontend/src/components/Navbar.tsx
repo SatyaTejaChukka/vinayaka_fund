@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { QrCode, Banknote, HeartHandshake, Lock, LayoutDashboard } from 'lucide-react';
+import { QrCode, Banknote, HeartHandshake, LayoutDashboard } from 'lucide-react';
 
 interface NavbarProps {
   slug?: string;
