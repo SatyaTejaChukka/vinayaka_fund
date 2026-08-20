@@ -201,14 +201,19 @@ def send_donation_notification_email(
     """
     load_dotenv()
 
-    default_notification_email = _env("NOTIFICATION_EMAIL", "323103382011@gvpce.ac.in")
+    configured_notification_email = _env("NOTIFICATION_EMAIL")
+    default_notification_email = configured_notification_email or "chukkasatyateja@gmail.com"
     smtp_server = _env("SMTP_SERVER", "smtp.gmail.com")
     smtp_port = _env_int("SMTP_PORT", 587)
     smtp_username = _env("SMTP_USERNAME")
     smtp_password = os.getenv("SMTP_PASSWORD", "").replace(" ", "").strip()
     sender_email = _env("SENDER_EMAIL") or smtp_username or "satyateja671@gmail.com"
 
-    recipient = target_email.strip() if target_email and target_email.strip() else default_notification_email
+    recipient = (
+        configured_notification_email
+        or (target_email.strip() if target_email and target_email.strip() else "")
+        or default_notification_email
+    )
     subject = f"New Donation Submission: INR {amount:,.2f} from {donor_name}"
 
     safe_donor_name = escape(donor_name)
