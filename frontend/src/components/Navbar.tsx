@@ -39,18 +39,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </Link>
 
-        {/* Right Admin Link */}
-        <div className="shrink-0">
-          {!isAdmin ? (
-            <Link
-              to="/admin/login"
-              className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-amber-300 hover:bg-slate-800/60 transition flex items-center gap-1.5 border border-slate-700/60"
-              title="Committee Admin Portal"
-            >
-              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span className="hidden sm:inline">Admin Login</span>
-            </Link>
-          ) : (
+        {/* Right Admin Link (Shown only in Admin layout) */}
+        {isAdmin && (
+          <div className="shrink-0">
             <Link
               to={`/fund/${slug}`}
               target="_blank"
@@ -59,8 +50,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
               <span>Public View ↗</span>
             </Link>
-          )}
-        </div>
+          </div>
+        )}
 
       </div>
 
