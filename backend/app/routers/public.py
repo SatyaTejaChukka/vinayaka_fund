@@ -65,12 +65,13 @@ def get_public_expenses(slug: str, db: Session = Depends(get_db)):
 def submit_donation(slug: str, donation_in: DonationSubmit, db: Session = Depends(get_db)):
     fund = get_fund_by_slug(slug, db)
 
+    pm = "CASH" if donation_in.upi_transaction_id and donation_in.upi_transaction_id.startswith("CASH-") else "UPI"
     new_donation = Donation(
         fund_id=fund.id,
         donor_name=donation_in.donor_name,
         amount=donation_in.amount,
         donation_date=donation_in.donation_date,
-        payment_method="UPI",
+        payment_method=pm,
         upi_transaction_id=donation_in.upi_transaction_id,
         description=donation_in.description,
         status="PENDING",

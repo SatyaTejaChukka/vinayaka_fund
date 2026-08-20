@@ -43,7 +43,7 @@ def calculate_fund_summary(db: Session, fund: Fund) -> PublicFundSummary:
     committed_balance = total_collected - total_spent - pending_expenses
 
     target = fund.target_amount if fund.target_amount > 0 else 1.0
-    collection_percentage = min(100.0, round((total_collected / target) * 100.0, 2))
+    collection_percentage = round((total_collected / target) * 100.0, 2)
     
     expense_percentage = 0.0
     if total_collected > 0:
