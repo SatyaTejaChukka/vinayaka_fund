@@ -32,7 +32,20 @@ export const AdminLogin: React.FC = () => {
 
       navigate('/admin/dashboard');
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || 'Authentication failed. Please check your details.');
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+
+      if (Array.isArray(detail)) {
+        setErrorMsg(detail.map((item: any) => item.msg).join(' '));
+      } else if (detail) {
+        setErrorMsg(detail);
+      } else if (!err.response) {
+        setErrorMsg('Unable to reach the server. Please check your connection and try again.');
+      } else if (status === 401) {
+        setErrorMsg('The email or password is incorrect.');
+      } else {
+        setErrorMsg('Authentication failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
