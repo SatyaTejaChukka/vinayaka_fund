@@ -6,14 +6,36 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 load_dotenv()
+import os
+from alembic.config import Config
+from alembic import command
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal, get_db
 from app.models import User, Fund
 from app.core.security import get_password_hash
 from app.routers import auth, public, admin_funds, admin_donations, admin_expenses, admin_audit
 
-# Initialize database tables
-Base.metadata.create_all(bind=engine)
+def run_db_migrations():
+    """Run Alembic migrations programmatically to head revision."""
+    try:
+        backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        alembic_ini_path = os.path.join(backend_dir, "alembic.ini")
+        alembic_cfg = Config(alembic_ini_path)
+        
+        db_url = settings.DATABASE_URL
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        alembic_cfg.set_main_option("sqlalchemy.url", db_url)
+        
+        command.upgrade(alembic_cfg, "head")
+        print("Alembic database migrations applied successfully to HEAD.")
+    except Exception as e:
+        print(f"Warning: Alembic programmatic migration runner notice: {e}")
+        # Ensure tables exist as fallback
+        Base.metadata.create_all(bind=engine)
+
+# Initialize database schema through Alembic / metadata
+run_db_migrations()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -34,17 +56,6 @@ app.add_middleware(
 def startup_db_seed():
     db = SessionLocal()
     try:
-        # Auto-migrate missing columns on startup (safe for PostgreSQL & SQLite)
-        for migration_sql in [
-            "ALTER TABLE donations ADD COLUMN student_year VARCHAR",
-            "ALTER TABLE funds ADD COLUMN admin_id INTEGER"
-        ]:
-            try:
-                db.execute(text(migration_sql))
-                db.commit()
-            except Exception:
-                db.rollback()
-
         # Check if admin user exists
         admin = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
         if not admin:
