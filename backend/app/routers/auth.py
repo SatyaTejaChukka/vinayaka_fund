@@ -36,10 +36,17 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
 def login(login_req: LoginRequest, db: Session = Depends(get_db)):
     email_clean = login_req.email.lower().strip()
     user = db.query(User).filter(User.email == email_clean).first()
-    if not user or not verify_password(login_req.password, user.password_hash):
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password credentials",
+            detail="No account exists for this email address",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not verify_password(login_req.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.is_active:
