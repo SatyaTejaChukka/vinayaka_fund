@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { ToastProvider } from './context/ToastContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { PublicFund } from './pages/public/PublicFund';
@@ -78,6 +79,7 @@ export const App: React.FC = () => {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <Analytics />
         </BrowserRouter>
       </ConfirmProvider>
     </ToastProvider>
