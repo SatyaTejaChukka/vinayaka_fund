@@ -69,9 +69,9 @@ export const CelebrationBlessingModal: React.FC<CelebrationBlessingModalProps> =
   if (isFinalYear) {
     mainBlessing = 'Ee sem lo neevi anni subjects pass ayipoyi, neeku placement lo manchi job vastaadhi';
     blessingSub = 'May Lord Ganesha shower blessings on your final year exams and grant you your dream placement job! 🎓💼';
-  } else if (!isJuniorYear && data.studentYear) {
+  } else if (!isJuniorYear) {
     mainBlessing = 'Ganesha anugraham tho meeku, mee kutumbaniki subham & manchi vijayam kaluguthaayi';
-    blessingSub = 'May Lord Ganesha shower prosperity, good health, and success upon you! ';
+    blessingSub = 'May Lord Ganesha shower prosperity, good health, and success upon you!';
   }
 
   const formatINR = (val: number) => {
@@ -106,8 +106,17 @@ export const CelebrationBlessingModal: React.FC<CelebrationBlessingModalProps> =
         {/* Special Telugu Blessing Banner */}
         <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-amber-500/20 via-slate-900/90 to-slate-900/90 border border-amber-400/50 shadow-inner space-y-2 relative overflow-hidden">
           <div className="flex items-center justify-center gap-1.5 text-amber-300 text-xs font-bold uppercase tracking-wider">
-            <GraduationCap className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>Special Student Blessing</span>
+            {isJuniorYear || isFinalYear ? (
+              <>
+                <GraduationCap className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Special Student Blessing</span>
+              </>
+            ) : (
+              <>
+                <Award className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Special Devotee Blessing</span>
+              </>
+            )}
           </div>
 
           <h3 className="text-base sm:text-xl font-extrabold text-amber-200 leading-snug tracking-normal px-2">

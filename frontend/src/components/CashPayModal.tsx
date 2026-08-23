@@ -45,14 +45,12 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
       setErrorMsg('Please enter your name');
       return;
     }
-    if (!studentYear) {
-      setErrorMsg('Please select your studying year (1st, 2nd, 3rd, or 4th Year)');
-      return;
-    }
     if (currentAmount <= 0) {
       setErrorMsg('Please enter a valid cash donation amount');
       return;
     }
+
+    const resolvedYear = studentYear.trim() || 'Other / General';
 
     try {
       setIsSubmitting(true);
@@ -64,14 +62,14 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
         donation_date: donationDate,
         upi_transaction_id: refId,
         show_donor_name: showPublic,
-        student_year: studentYear,
+        student_year: resolvedYear,
         description: handedTo.trim() ? `Direct Cash Handover (${handedTo.trim()})` : 'Direct Cash Handover'
       });
 
       const submissionInfo = {
         donorName: donorName.trim(),
         amount: currentAmount,
-        studentYear,
+        studentYear: resolvedYear,
         refId
       };
 
@@ -171,15 +169,19 @@ export const CashPayModal: React.FC<CashPayModalProps> = ({
 
               {/* Academic Year Selection */}
               <div>
-                <label className="text-xs font-bold text-amber-300 block mb-1.5">
-                  Select Studying Year / Role *
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-amber-300">
+                    Select Studying Year / Role
+                  </label>
+                  <span className="text-[10px] text-slate-400">Optional (Default: Other / Faculty)</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                   {[
                     { label: '1st Year (I)', short: '1st Year (I)' },
                     { label: '2nd Year (II)', short: '2nd Year (II)' },
                     { label: '3rd Year (III)', short: '3rd Year (III)' },
                     { label: '4th Year (IV)', short: '4th Year (IV)' },
+                    { label: 'Other / General', short: 'Other / Faculty' },
                   ].map((item) => (
                     <button
                       key={item.label}

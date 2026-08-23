@@ -3,7 +3,9 @@ import { useParams } from 'react-router-dom';
 import { 
   Heart, ArrowUpRight, ArrowDownLeft, 
   Wallet, CheckCircle2, Clock, Layers, Calendar,
-  Download, GraduationCap, Filter, Banknote
+  Download, GraduationCap, Filter, Banknote,
+  Search, ArrowUpDown, ChevronLeft, ChevronRight, X,
+  Percent, Users
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
@@ -44,6 +46,11 @@ export const PublicFund: React.FC = () => {
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
   const [selectedYear, setSelectedYear] = useState<string>('ALL_YEARS');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_high' | 'amount_low'>('newest');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 9;
+
   const [blessingData, setBlessingData] = useState<{
     donorName: string;
     amount: number;
@@ -90,16 +97,53 @@ export const PublicFund: React.FC = () => {
     fetchFundData();
   }, [slug]);
 
-  const filteredDonations = donations.filter((d) => {
+  // Batch analytics computation for selected year
+  const batchDonations = donations.filter((d) => {
     if (selectedYear === 'ALL_YEARS') return true;
     if (selectedYear === 'Other / General') {
-      return !d.student_year || d.student_year === 'Other' || d.student_year === 'General';
+      return !d.student_year || d.student_year === 'Other' || d.student_year === 'General' || d.student_year === 'Other / General';
     }
     return d.student_year === selectedYear;
   });
 
+  const batchTotal = batchDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+  const batchCount = batchDonations.length;
+  const batchTargetPercentage = fund && fund.target_amount > 0
+    ? ((batchTotal / fund.target_amount) * 100).toFixed(1)
+    : '0.0';
+
+  // Search and Sort Pipeline
+  const searchedDonations = batchDonations.filter((d) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      d.donor_name.toLowerCase().includes(q) ||
+      (d.student_year && d.student_year.toLowerCase().includes(q))
+    );
+  });
+
+  const sortedDonations = [...searchedDonations].sort((a, b) => {
+    if (sortBy === 'amount_high') return b.amount - a.amount;
+    if (sortBy === 'amount_low') return a.amount - b.amount;
+    if (sortBy === 'oldest') {
+      const dateA = new Date(a.donation_date).getTime();
+      const dateB = new Date(b.donation_date).getTime();
+      return dateA !== dateB ? dateA - dateB : a.id - b.id;
+    }
+    const dateA = new Date(a.donation_date).getTime();
+    const dateB = new Date(b.donation_date).getTime();
+    return dateB !== dateA ? dateB - dateA : b.id - a.id;
+  });
+
+  const totalPages = Math.ceil(sortedDonations.length / pageSize) || 1;
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedDonations = sortedDonations.slice(
+    (safeCurrentPage - 1) * pageSize,
+    safeCurrentPage * pageSize
+  );
+
   const handleExportDonationsCsv = () => {
-    if (filteredDonations.length === 0) {
+    if (sortedDonations.length === 0) {
       toast.warning('No verified donations available to export.');
       return;
     }
@@ -114,8 +158,8 @@ export const PublicFund: React.FC = () => {
     ];
 
     const fileSlug = fund?.public_slug || 'vinayaka';
-    exportToCsv(filteredDonations, columns, `${fileSlug}_verified_donations`);
-    toast.success(`Exported ${filteredDonations.length} public donations to CSV!`);
+    exportToCsv(sortedDonations, columns, `${fileSlug}_verified_donations`);
+    toast.success(`Exported ${sortedDonations.length} public donations to CSV!`);
   };
 
   const handleExportExpensesCsv = () => {
@@ -325,56 +369,114 @@ export const PublicFund: React.FC = () => {
         <section id="donations-section" className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 sm:space-y-6 shadow-xl">
           
           {/* Tab Selector & Export Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-amber-500/20 pb-4 gap-3">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-amber-500/20 pb-4 gap-3">
+            {/* Segmented Tab Controls */}
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 sm:flex sm:items-center w-full sm:w-auto p-1 rounded-2xl bg-slate-950/60 border border-amber-500/20">
               <button
                 onClick={() => setActiveTab('donations')}
-                className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 active:scale-95 ${
+                className={`py-2 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 ${
                   activeTab === 'donations'
-                    ? 'gold-button text-amber-950 shadow-lg'
-                    : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-700/60'
+                    ? 'gold-button text-amber-950 shadow-md'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
                 }`}
               >
                 <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span>Verified Donations ({donations.length})</span>
+                <span className="truncate">Donations</span>
+                <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-extrabold ${
+                  activeTab === 'donations' ? 'bg-amber-950/20 text-amber-950' : 'bg-slate-800 text-slate-300'
+                }`}>
+                  {donations.length}
+                </span>
               </button>
 
               <button
                 onClick={() => setActiveTab('expenses')}
-                className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 active:scale-95 ${
+                className={`py-2 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 ${
                   activeTab === 'expenses'
-                    ? 'gold-button text-amber-950 shadow-lg'
-                    : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-700/60'
+                    ? 'gold-button text-amber-950 shadow-md'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
                 }`}
               >
                 <ArrowDownLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span>Expenses ({expenses.length})</span>
+                <span className="truncate">Expenses</span>
+                <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-extrabold ${
+                  activeTab === 'expenses' ? 'bg-amber-950/20 text-amber-950' : 'bg-slate-800 text-slate-300'
+                }`}>
+                  {expenses.length}
+                </span>
               </button>
             </div>
 
             {/* CSV Export Button for active tab */}
-            <div className="flex items-center gap-2">
+            <div className="w-full sm:w-auto flex items-center justify-end">
               {activeTab === 'donations' ? (
                 <button
                   onClick={handleExportDonationsCsv}
                   disabled={filteredDonations.length === 0}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed ml-auto"
+                  className="w-full sm:w-auto px-4 py-2 sm:py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 shrink-0" />
                   <span>Download Donations CSV</span>
                 </button>
               ) : (
                 <button
                   onClick={handleExportExpensesCsv}
                   disabled={expenses.length === 0}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center gap-1.5 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed ml-auto"
+                  className="w-full sm:w-auto px-4 py-2 sm:py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 shrink-0" />
                   <span>Download Expenses CSV</span>
                 </button>
               )}
             </div>
           </div>
+
+          {/* Selected Batch Statistics Summary */}
+          {activeTab === 'donations' && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900/60 to-slate-900/60 border border-amber-500/30 text-xs shadow-inner">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-sm shrink-0 border border-amber-500/30">
+                  ₹
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block truncate">
+                    {selectedYear === 'ALL_YEARS' ? 'All Batches Total' : `${selectedYear} Total`}
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-amber-300">
+                    {formatINR(batchTotal)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-500/30">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block truncate">
+                    Verified Donors
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-white">
+                    {batchCount} {batchCount === 1 ? 'donation' : 'donations'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold text-sm shrink-0 border border-purple-500/30">
+                  <Percent className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block truncate">
+                    Target Share
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-purple-300">
+                    {batchTargetPercentage}% of goal
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Academic Year Filter Pills (For Donations Tab) */}
           {activeTab === 'donations' && (
@@ -386,7 +488,10 @@ export const PublicFund: React.FC = () => {
               {PUBLIC_ACADEMIC_YEARS.map((year) => (
                 <button
                   key={year}
-                  onClick={() => setSelectedYear(year)}
+                  onClick={() => {
+                    setSelectedYear(year);
+                    setCurrentPage(1);
+                  }}
                   className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${
                     selectedYear === year
                       ? 'bg-amber-500 text-slate-950 shadow-md'
@@ -399,58 +504,179 @@ export const PublicFund: React.FC = () => {
             </div>
           )}
 
+          {/* Search by Donor Name & Sort Controls */}
+          {activeTab === 'donations' && (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              {/* Live Search Input */}
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Search donor name..."
+                  className="w-full pl-9 pr-8 py-2 sm:py-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-amber-400 transition"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setCurrentPage(1);
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5 rounded-full"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Sort By Dropdown */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="relative w-full sm:w-auto">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-amber-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => {
+                      setSortBy(e.target.value as any);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full sm:w-auto pl-8 pr-7 py-2 sm:py-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-white text-xs font-semibold focus:outline-none focus:border-amber-400 appearance-none cursor-pointer"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="amount_high">Highest Amount</option>
+                    <option value="amount_low">Lowest Amount</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Donations Tab View */}
           {activeTab === 'donations' && (
             <div className="space-y-4">
-              {filteredDonations.length === 0 ? (
+              {sortedDonations.length === 0 ? (
                 <EmptyState
                   icon={Filter}
                   emoji="🙏"
-                  title="No Donations in this Category"
+                  title={searchQuery ? 'No Donors Found' : 'No Donations in this Category'}
                   description={
-                    selectedYear !== 'ALL_YEARS'
-                      ? `No verified donations found for "${selectedYear}".`
+                    searchQuery
+                      ? `No verified donations match the search "${searchQuery}".`
+                      : selectedYear !== 'ALL_YEARS'
+                      ? `No verified donations recorded yet for "${selectedYear}".`
                       : 'No verified donations recorded yet. Be the first to contribute!'
                   }
-                  actionText={selectedYear !== 'ALL_YEARS' ? 'Show All Batches' : undefined}
-                  onAction={selectedYear !== 'ALL_YEARS' ? () => setSelectedYear('ALL_YEARS') : undefined}
+                  actionText={
+                    searchQuery
+                      ? 'Clear Search'
+                      : selectedYear !== 'ALL_YEARS'
+                      ? 'Show All Batches'
+                      : undefined
+                  }
+                  onAction={
+                    searchQuery
+                      ? () => {
+                          setSearchQuery('');
+                          setCurrentPage(1);
+                        }
+                      : selectedYear !== 'ALL_YEARS'
+                      ? () => {
+                          setSelectedYear('ALL_YEARS');
+                          setCurrentPage(1);
+                        }
+                      : undefined
+                  }
                 />
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredDonations.map((d) => (
-                    <div
-                      key={d.id}
-                      className="p-4 rounded-2xl bg-slate-900/70 border border-amber-500/20 hover:border-amber-500/40 transition space-y-2 relative overflow-hidden shadow-md"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <span className="font-bold text-white text-sm sm:text-base break-words block truncate">
-                            {d.donor_name}
-                          </span>
-                          {d.student_year && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 inline-block mt-1">
-                              🎓 {d.student_year}
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {paginatedDonations.map((d) => (
+                      <div
+                        key={d.id}
+                        className="p-4 rounded-2xl bg-slate-900/70 border border-amber-500/20 hover:border-amber-500/40 transition space-y-2 relative overflow-hidden shadow-md"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <span className="font-bold text-white text-sm sm:text-base break-words block truncate">
+                              {d.donor_name}
                             </span>
-                          )}
+                            {d.student_year && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 inline-block mt-1">
+                                🎓 {d.student_year}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 flex items-center gap-1 shrink-0">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Verified
+                          </span>
                         </div>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 flex items-center gap-1 shrink-0">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Verified
-                        </span>
-                      </div>
 
-                      <div className="flex items-baseline justify-between pt-1 border-t border-slate-800/80">
-                        <span className="text-xl font-extrabold text-amber-400">
-                          {formatINR(d.amount)}
-                        </span>
-                        <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {d.donation_date}
-                        </span>
+                        <div className="flex items-baseline justify-between pt-1 border-t border-slate-800/80">
+                          <span className="text-xl font-extrabold text-amber-400">
+                            {formatINR(d.amount)}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {d.donation_date}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination Navigation */}
+                  {totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                      <span className="text-xs text-slate-400">
+                        Showing <strong className="text-white">{(safeCurrentPage - 1) * pageSize + 1}</strong> to{' '}
+                        <strong className="text-white">
+                          {Math.min(safeCurrentPage * pageSize, sortedDonations.length)}
+                        </strong>{' '}
+                        of <strong className="text-white">{sortedDonations.length}</strong> donations
+                      </span>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={safeCurrentPage === 1}
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs flex items-center gap-1 font-bold transition active:scale-95"
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Prev</span>
+                        </button>
+
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-7 h-7 rounded-lg text-xs font-bold transition active:scale-95 ${
+                              safeCurrentPage === pageNum
+                                ? 'gold-button text-amber-950 shadow-md font-extrabold'
+                                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={safeCurrentPage === totalPages}
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed text-xs flex items-center gap-1 font-bold transition active:scale-95"
+                        >
+                          <span className="hidden sm:inline">Next</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           )}

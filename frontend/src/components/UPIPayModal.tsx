@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, Copy, CheckCircle2, Send, Smartphone, ExternalLink } from 'lucide-react';
+import { X, Copy, CheckCircle2, Send } from 'lucide-react';
 import { publicApi } from '../services/api';
 import type { FundSummary } from '../types';
 import { LogoMark } from './LogoMark';
@@ -65,10 +65,6 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
       setErrorMsg('Please enter your name');
       return;
     }
-    if (!studentYear) {
-      setErrorMsg('Please select your studying year (1st, 2nd, 3rd, or 4th Year)');
-      return;
-    }
     if (!upiRefId.trim()) {
       setErrorMsg('Please enter the UPI Transaction Reference ID from GPay/PhonePe');
       return;
@@ -77,6 +73,8 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
       setErrorMsg('Please enter a valid donation amount');
       return;
     }
+
+    const resolvedYear = studentYear.trim() || 'Other / General';
 
     try {
       setIsSubmitting(true);
@@ -87,13 +85,13 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
         donation_date: paymentDate,
         upi_transaction_id: upiRefId.trim(),
         show_donor_name: showPublic,
-        student_year: studentYear
+        student_year: resolvedYear
       });
 
       const submissionInfo = {
         donorName: donorName.trim(),
         amount: currentAmount,
-        studentYear,
+        studentYear: resolvedYear,
         refId: upiRefId.trim()
       };
 
@@ -181,7 +179,7 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
               {/* QR Code Container */}
               <div className="p-4 sm:p-5 rounded-2xl festive-glass-gold border border-amber-500/30 text-center flex flex-col items-center">
                 <span className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-3">
-                  2. Scan QR or Tap Pay Button
+                  2. Scan QR or Copy UPI ID
                 </span>
                 
                 <div className="p-2.5 sm:p-3 bg-white rounded-2xl shadow-inner mb-3">
@@ -196,16 +194,6 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
                 <p className="text-xs text-amber-200/90 font-medium mb-3">
                   Paying: <span className="font-extrabold text-white text-sm sm:text-base">₹{currentAmount.toLocaleString('en-IN')}</span>
                 </p>
-
-                {/* Direct Mobile Pay Button */}
-                <a
-                  href={upiUri}
-                  className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-extrabold bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 hover:brightness-110 active:scale-[0.98] shadow-lg flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm uppercase tracking-wide transition border border-emerald-300/40 mb-3"
-                >
-                  <Smartphone className="w-4 h-4 text-slate-950 shrink-0" />
-                  <span>Pay via UPI app</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-950 shrink-0" />
-                </a>
 
                 {/* UPI ID Copy Bar */}
                 <div className="w-full p-2 sm:p-2.5 rounded-xl bg-slate-950/80 border border-slate-700/60 flex items-center justify-between text-xs gap-1">
@@ -269,15 +257,19 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
 
               {/* Academic Year Checklist / Role Selection */}
               <div>
-                <label className="text-xs font-bold text-amber-300 block mb-1.5">
-                  Select Studying Year / Role *
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-amber-300">
+                    Select Studying Year / Role
+                  </label>
+                  <span className="text-[10px] text-slate-400">Optional (Default: Other / Faculty)</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                   {[
                     { label: '1st Year (I)', short: '1st Year (I)' },
                     { label: '2nd Year (II)', short: '2nd Year (II)' },
                     { label: '3rd Year (III)', short: '3rd Year (III)' },
                     { label: '4th Year (IV)', short: '4th Year (IV)' },
+                    { label: 'Other / General', short: 'Other / Faculty' },
                   ].map((item) => (
                     <button
                       key={item.label}
