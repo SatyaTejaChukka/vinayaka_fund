@@ -411,7 +411,7 @@ export const PublicFund: React.FC = () => {
               {activeTab === 'donations' ? (
                 <button
                   onClick={handleExportDonationsCsv}
-                  disabled={filteredDonations.length === 0}
+                  disabled={sortedDonations.length === 0}
                   className="w-full sm:w-auto px-4 py-2 sm:py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                 >
                   <Download className="w-3.5 h-3.5 shrink-0" />
