@@ -22,6 +22,7 @@ import { exportToCsv, type CsvColumn } from '../../utils/csvExporter';
 import { publicApi } from '../../services/api';
 import type { FundSummary, PublicDonation, PublicExpense } from '../../types';
 
+// Public academic batch filter presets
 const PUBLIC_ACADEMIC_YEARS = [
   'ALL_YEARS',
   '1st Year (I)',
