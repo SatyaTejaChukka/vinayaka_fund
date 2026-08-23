@@ -11,6 +11,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { UPIPayModal } from '../../components/UPIPayModal';
 import { CashPayModal } from '../../components/CashPayModal';
 import { PrintableQRPoster } from '../../components/PrintableQRPoster';
+import { CelebrationBlessingModal } from '../../components/CelebrationBlessingModal';
 import { LogoMark } from '../../components/LogoMark';
 import { TableSkeleton, CardSkeleton } from '../../components/LoadingSkeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -43,6 +44,22 @@ export const PublicFund: React.FC = () => {
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
   const [selectedYear, setSelectedYear] = useState<string>('ALL_YEARS');
+  const [blessingData, setBlessingData] = useState<{
+    donorName: string;
+    amount: number;
+    studentYear: string;
+    refId?: string;
+  } | null>(null);
+
+  const handleDonationSuccess = (data: {
+    donorName: string;
+    amount: number;
+    studentYear: string;
+    refId?: string;
+  }) => {
+    setBlessingData(data);
+    fetchFundData();
+  };
 
   const fetchFundData = async () => {
     if (!slug) {
@@ -515,7 +532,7 @@ export const PublicFund: React.FC = () => {
         fund={fund}
         isOpen={isDonateOpen}
         onClose={() => setIsDonateOpen(false)}
-        onSuccessSubmitted={fetchFundData}
+        onSuccessSubmitted={handleDonationSuccess}
       />
 
       {/* Cash Payment Modal */}
@@ -523,7 +540,7 @@ export const PublicFund: React.FC = () => {
         fund={fund}
         isOpen={isCashOpen}
         onClose={() => setIsCashOpen(false)}
-        onSuccessSubmitted={fetchFundData}
+        onSuccessSubmitted={handleDonationSuccess}
       />
 
       {/* Printable Poster Flyer Modal */}
@@ -531,6 +548,13 @@ export const PublicFund: React.FC = () => {
         fund={fund}
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
+      />
+
+      {/* Custom Telugu Celebration Blessing Modal */}
+      <CelebrationBlessingModal
+        isOpen={!!blessingData}
+        onClose={() => setBlessingData(null)}
+        data={blessingData}
       />
     </div>
   );

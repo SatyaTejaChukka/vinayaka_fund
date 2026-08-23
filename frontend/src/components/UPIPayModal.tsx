@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import confetti from 'canvas-confetti';
 import { X, Copy, CheckCircle2, Send, Smartphone, ExternalLink } from 'lucide-react';
 import { publicApi } from '../services/api';
 import type { FundSummary } from '../types';
@@ -10,7 +9,12 @@ interface UPIPayModalProps {
   fund: FundSummary;
   isOpen: boolean;
   onClose: () => void;
-  onSuccessSubmitted: () => void;
+  onSuccessSubmitted: (data: {
+    donorName: string;
+    amount: number;
+    studentYear: string;
+    refId: string;
+  }) => void;
 }
 
 export const UPIPayModal: React.FC<UPIPayModalProps> = ({
@@ -23,7 +27,6 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
   const [copiedUpi, setCopiedUpi] = useState<boolean>(false);
   const [showSubmissionForm, setShowSubmissionForm] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [submittedSuccess, setSubmittedSuccess] = useState<boolean>(false);
 
   // Form State
   const [donorName, setDonorName] = useState<string>('');
@@ -87,13 +90,22 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
         student_year: studentYear
       });
 
-      setSubmittedSuccess(true);
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-      onSuccessSubmitted();
+      const submissionInfo = {
+        donorName: donorName.trim(),
+        amount: currentAmount,
+        studentYear,
+        refId: upiRefId.trim()
+      };
+
+      // Reset form
+      setDonorName('');
+      setStudentYear('');
+      setUpiRefId('');
+      setShowSubmissionForm(false);
+
+      // Close UPI modal and trigger custom blessing modal
+      onSuccessSubmitted(submissionInfo);
+      onClose();
     } catch (err: any) {
       setErrorMsg(err.response?.data?.detail || 'Failed to submit transaction details. Please try again.');
     } finally {
@@ -123,272 +135,241 @@ export const UPIPayModal: React.FC<UPIPayModalProps> = ({
         </div>
 
         <div className="overflow-y-auto pr-1 flex-1 space-y-4">
-          {!submittedSuccess ? (
-            <>
-              <div className="text-center mb-4">
-                <p className="text-xs text-slate-300">
-                  Zero commission direct UPI payment to committee account
-                </p>
-              </div>
+          <div className="text-center mb-4">
+            <p className="text-xs text-slate-300">
+              Zero commission direct UPI payment to committee account
+            </p>
+          </div>
 
-            {!showSubmissionForm ? (
-              <div className="space-y-5">
-                {/* Amount Preset Chips */}
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-amber-300 block mb-2">
-                    1. Select Donation Amount
-                  </label>
-                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mb-3">
-                    {[100, 200, 500, 1000].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => handlePresetClick(amt)}
-                        className={`py-2 sm:py-2.5 px-1 rounded-xl font-bold text-xs sm:text-sm transition border active:scale-95 ${
-                          currentAmount === amt
-                            ? 'gold-button border-amber-400'
-                            : 'bg-slate-900/60 border-slate-700 text-slate-200 hover:border-amber-500/40'
-                        }`}
-                      >
-                        ₹{amt}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Custom Amount Input */}
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold text-sm">₹</span>
-                    <input
-                      type="number"
-                      value={amountStr}
-                      onChange={(e) => setAmountStr(e.target.value)}
-                      placeholder="Enter custom amount"
-                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 text-white font-bold focus:outline-none focus:border-amber-400 text-xs sm:text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* QR Code Container */}
-                <div className="p-4 sm:p-5 rounded-2xl festive-glass-gold border border-amber-500/30 text-center flex flex-col items-center">
-                  <span className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-3">
-                    2. Scan QR or Tap Pay Button
-                  </span>
-                  
-                  <div className="p-2.5 sm:p-3 bg-white rounded-2xl shadow-inner mb-3">
-                    <QRCodeSVG
-                      value={upiUri}
-                      size={150}
-                      level="M"
-                      includeMargin={false}
-                    />
-                  </div>
-
-                  <p className="text-xs text-amber-200/90 font-medium mb-3">
-                    Paying: <span className="font-extrabold text-white text-sm sm:text-base">₹{currentAmount.toLocaleString('en-IN')}</span>
-                  </p>
-
-                  {/* Direct Mobile Pay Button */}
-                  <a
-                    href={upiUri}
-                    className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-extrabold bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 hover:brightness-110 active:scale-[0.98] shadow-lg flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm uppercase tracking-wide transition border border-emerald-300/40 mb-3"
-                  >
-                    <Smartphone className="w-4 h-4 text-slate-950 shrink-0" />
-                    <span>Pay via UPI app</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-950 shrink-0" />
-                  </a>
-
-                  {/* UPI ID Copy Bar */}
-                  <div className="w-full p-2 sm:p-2.5 rounded-xl bg-slate-950/80 border border-slate-700/60 flex items-center justify-between text-xs gap-1">
-                    <div className="truncate text-slate-300 font-mono text-[11px] sm:text-xs">
-                      UPI ID: <span className="font-bold text-amber-300">{fund.upi_id}</span>
-                    </div>
+          {!showSubmissionForm ? (
+            <div className="space-y-5">
+              {/* Amount Preset Chips */}
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-amber-300 block mb-2">
+                  1. Select Donation Amount
+                </label>
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mb-3">
+                  {[100, 200, 500, 1000].map((amt) => (
                     <button
-                      onClick={handleCopyUpi}
-                      className="px-2 sm:px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 hover:bg-amber-500/30 transition flex items-center gap-1 shrink-0 text-xs"
+                      key={amt}
+                      type="button"
+                      onClick={() => handlePresetClick(amt)}
+                      className={`py-2 sm:py-2.5 px-1 rounded-xl font-bold text-xs sm:text-sm transition border active:scale-95 ${
+                        currentAmount === amt
+                          ? 'gold-button border-amber-400'
+                          : 'bg-slate-900/60 border-slate-700 text-slate-200 hover:border-amber-500/40'
+                      }`}
                     >
-                      {copiedUpi ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Copy</span>
-                        </>
-                      )}
+                      ₹{amt}
                     </button>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Transition Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowSubmissionForm(true)}
-                  className="w-full py-3 sm:py-3.5 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-xs sm:text-base active:scale-[0.98] transition"
-                >
-                  <span>3. I Have Completed Payment ➔</span>
-                </button>
-              </div>
-            ) : (
-              /* Submission Details Form */
-              <form onSubmit={handleSubmitTransaction} className="space-y-4">
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200">
-                  Submit payment details so committee admins can verify your transaction and update the live public counter.
-                </div>
-
-                {errorMsg && (
-                  <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-xs text-rose-300 font-semibold">
-                    {errorMsg}
-                  </div>
-                )}
-
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">
-                    Your Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={donorName}
-                    onChange={(e) => setDonorName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-amber-400 text-sm"
-                  />
-                </div>
-
-                {/* Academic Year Checklist / Role Selection */}
-                <div>
-                  <label className="text-xs font-bold text-amber-300 block mb-1.5">
-                    Select Studying Year / Role *
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                    {[
-                      { label: '1st Year (I)', short: '1st Year (I)' },
-                      { label: '2nd Year (II)', short: '2nd Year (II)' },
-                      { label: '3rd Year (III)', short: '3rd Year (III)' },
-                      { label: '4th Year (IV)', short: '4th Year (IV)' },
-                    ].map((item) => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() => setStudentYear(item.label)}
-                        className={`py-2 px-1 rounded-xl font-bold text-xs transition border active:scale-95 text-center ${
-                          studentYear === item.label
-                            ? 'gold-button text-amber-950 border-amber-400 shadow-md'
-                            : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-amber-500/40'
-                        }`}
-                      >
-                        {item.short}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">
-                    Amount Paid (₹) *
-                  </label>
+                {/* Custom Amount Input */}
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold text-sm">₹</span>
                   <input
                     type="number"
-                    required
                     value={amountStr}
                     onChange={(e) => setAmountStr(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white font-bold focus:outline-none focus:border-amber-400 text-sm"
+                    placeholder="Enter custom amount"
+                    className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 text-white font-bold focus:outline-none focus:border-amber-400 text-xs sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* QR Code Container */}
+              <div className="p-4 sm:p-5 rounded-2xl festive-glass-gold border border-amber-500/30 text-center flex flex-col items-center">
+                <span className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider mb-3">
+                  2. Scan QR or Tap Pay Button
+                </span>
+                
+                <div className="p-2.5 sm:p-3 bg-white rounded-2xl shadow-inner mb-3">
+                  <QRCodeSVG
+                    value={upiUri}
+                    size={150}
+                    level="M"
+                    includeMargin={false}
                   />
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">
-                    UPI Reference / Transaction ID *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={upiRefId}
-                    onChange={(e) => setUpiRefId(e.target.value)}
-                    placeholder="Enter the transaction ID"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-400 text-sm"
-                  />
-                </div>
+                <p className="text-xs text-amber-200/90 font-medium mb-3">
+                  Paying: <span className="font-extrabold text-white text-sm sm:text-base">₹{currentAmount.toLocaleString('en-IN')}</span>
+                </p>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">
-                    Payment Date
-                  </label>
-                  <input
-                    type="date"
-                    value={paymentDate}
-                    onChange={(e) => setPaymentDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-amber-400 text-sm"
-                  />
-                </div>
+                {/* Direct Mobile Pay Button */}
+                <a
+                  href={upiUri}
+                  className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-extrabold bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 hover:brightness-110 active:scale-[0.98] shadow-lg flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm uppercase tracking-wide transition border border-emerald-300/40 mb-3"
+                >
+                  <Smartphone className="w-4 h-4 text-slate-950 shrink-0" />
+                  <span>Pay via UPI app</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+                </a>
 
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="checkbox"
-                    id="showPublic"
-                    checked={showPublic}
-                    onChange={(e) => setShowPublic(e.target.checked)}
-                    className="w-4 h-4 rounded accent-amber-500 bg-slate-900 border-slate-700"
-                  />
-                  <label htmlFor="showPublic" className="text-xs text-slate-300 font-medium cursor-pointer">
-                    Show my name publicly on verified donations list
-                  </label>
-                </div>
-
-                <div className="flex gap-3 pt-3">
+                {/* UPI ID Copy Bar */}
+                <div className="w-full p-2 sm:p-2.5 rounded-xl bg-slate-950/80 border border-slate-700/60 flex items-center justify-between text-xs gap-1">
+                  <div className="truncate text-slate-300 font-mono text-[11px] sm:text-xs">
+                    UPI ID: <span className="font-bold text-amber-300">{fund.upi_id}</span>
+                  </div>
                   <button
-                    type="button"
-                    onClick={() => setShowSubmissionForm(false)}
-                    className="w-1/3 py-3 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm"
+                    onClick={handleCopyUpi}
+                    className="px-2 sm:px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 hover:bg-amber-500/30 transition flex items-center gap-1 shrink-0 text-xs"
                   >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-2/3 py-3 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-sm"
-                  >
-                    {isSubmitting ? 'Submitting...' : (
+                    {copiedUpi ? (
                       <>
-                        <Send className="w-4 h-4" />
-                        <span>Submit Details</span>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy</span>
                       </>
                     )}
                   </button>
                 </div>
-              </form>
-            )}
-          </>
-        ) : (
-          /* Success Receipt Card */
-          <div className="text-center py-6 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto text-3xl">
-              <CheckCircle2 className="w-10 h-10" />
+              </div>
+
+              {/* Transition Button */}
+              <button
+                type="button"
+                onClick={() => setShowSubmissionForm(true)}
+                className="w-full py-3 sm:py-3.5 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-xs sm:text-base active:scale-[0.98] transition"
+              >
+                <span>3. I Have Completed Payment ➔</span>
+              </button>
             </div>
-            <h3 className="text-2xl font-extrabold text-white">
-              Thank You for Your Devotion!
-            </h3>
-            <p className="text-sm text-slate-300 max-w-sm mx-auto">
-              Your donation entry for <span className="font-bold text-amber-300">₹{currentAmount.toLocaleString('en-IN')}</span> has been submitted to the committee.
-            </p>
-            <div className="p-4 rounded-2xl festive-glass border border-emerald-500/30 text-xs text-emerald-200 text-left space-y-1">
-              <p><span className="font-bold text-white">Status:</span> PENDING ADMIN VERIFICATION</p>
-              <p><span className="font-bold text-white">Donor:</span> {showPublic ? donorName : 'Anonymous (Publicly masked)'}</p>
-              <p><span className="font-bold text-white">Ref ID:</span> {upiRefId}</p>
-            </div>
-            <p className="text-xs text-slate-400">
-              Once verified by admin against bank statements, your transaction will immediately reflect in the total collection counter.
-            </p>
-            <button
-              onClick={onClose}
-              className="w-full py-3 rounded-xl font-bold gold-button text-sm"
-            >
-              Done
-            </button>
-          </div>
-        )}
+          ) : (
+            /* Submission Details Form */
+            <form onSubmit={handleSubmitTransaction} className="space-y-4">
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200">
+                Submit payment details so committee admins can verify your transaction and update the live public counter.
+              </div>
+
+              {errorMsg && (
+                <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-xs text-rose-300 font-semibold">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  Your Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={donorName}
+                  onChange={(e) => setDonorName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-amber-400 text-sm"
+                />
+              </div>
+
+              {/* Academic Year Checklist / Role Selection */}
+              <div>
+                <label className="text-xs font-bold text-amber-300 block mb-1.5">
+                  Select Studying Year / Role *
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {[
+                    { label: '1st Year (I)', short: '1st Year (I)' },
+                    { label: '2nd Year (II)', short: '2nd Year (II)' },
+                    { label: '3rd Year (III)', short: '3rd Year (III)' },
+                    { label: '4th Year (IV)', short: '4th Year (IV)' },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => setStudentYear(item.label)}
+                      className={`py-2 px-1 rounded-xl font-bold text-xs transition border active:scale-95 text-center ${
+                        studentYear === item.label
+                          ? 'gold-button text-amber-950 border-amber-400 shadow-md'
+                          : 'bg-slate-900/80 border-slate-700 text-slate-300 hover:border-amber-500/40'
+                      }`}
+                    >
+                      {item.short}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  Amount Paid (₹) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={amountStr}
+                  onChange={(e) => setAmountStr(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white font-bold focus:outline-none focus:border-amber-400 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  UPI Reference / Transaction ID *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={upiRefId}
+                  onChange={(e) => setUpiRefId(e.target.value)}
+                  placeholder="Enter the transaction ID"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white font-mono focus:outline-none focus:border-amber-400 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  Payment Date
+                </label>
+                <input
+                  type="date"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-amber-400 text-sm"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="showPublic"
+                  checked={showPublic}
+                  onChange={(e) => setShowPublic(e.target.checked)}
+                  className="w-4 h-4 rounded accent-amber-500 bg-slate-900 border-slate-700"
+                />
+                <label htmlFor="showPublic" className="text-xs text-slate-300 font-medium cursor-pointer">
+                  Show my name publicly on verified donations list
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowSubmissionForm(false)}
+                  className="w-1/3 py-3 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-2/3 py-3 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-sm"
+                >
+                  {isSubmitting ? 'Submitting...' : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Submit Details</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
       </div>
