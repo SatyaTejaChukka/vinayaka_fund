@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { 
   Heart, ArrowUpRight, ArrowDownLeft, 
   Wallet, CheckCircle2, Clock, Layers, Calendar,
-  Download, GraduationCap, Sparkles, Filter, Banknote
+  Download, GraduationCap, Filter, Banknote
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
