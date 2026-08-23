@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   Heart, ArrowUpRight, ArrowDownLeft, 
-  Wallet, CheckCircle2, Clock, Layers, Calendar
+  Wallet, CheckCircle2, Clock, Layers, Calendar, Filter
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
@@ -27,6 +27,15 @@ export const PublicFund: React.FC = () => {
   const [isCashOpen, setIsCashOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
+  const [selectedStudentYear, setSelectedStudentYear] = useState<string>('ALL');
+
+  const studentYears = Array.from(
+    new Set(donations.map((donation) => donation.student_year).filter(Boolean) as string[])
+  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+  const filteredDonations = selectedStudentYear === 'ALL'
+    ? donations
+    : donations.filter((donation) => donation.student_year === selectedStudentYear);
 
   const fetchFundData = async () => {
     try {
@@ -217,7 +226,7 @@ export const PublicFund: React.FC = () => {
                 }`}
               >
                 <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="truncate">Donations ({donations.length})</span>
+                <span className="truncate">Donations ({filteredDonations.length})</span>
               </button>
 
               <button
@@ -241,13 +250,35 @@ export const PublicFund: React.FC = () => {
           {/* Donations Tab View */}
           {activeTab === 'donations' && (
             <div className="space-y-4">
-              {donations.length === 0 ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/50 border border-amber-500/20">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-200">
+                  <Filter className="w-4 h-4 text-amber-400" />
+                  <span>Filter by student year</span>
+                </div>
+                <select
+                  value={selectedStudentYear}
+                  onChange={(event) => setSelectedStudentYear(event.target.value)}
+                  className="w-full sm:w-auto min-w-[190px] px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-semibold focus:outline-none focus:border-amber-400"
+                  aria-label="Filter donations by student year"
+                >
+                  <option value="ALL">All Years ({donations.length})</option>
+                  {studentYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year} ({donations.filter((donation) => donation.student_year === year).length})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {filteredDonations.length === 0 ? (
                 <div className="py-12 text-center text-slate-400 text-sm">
-                  No verified donations recorded yet. Be the first to contribute!
+                  {donations.length === 0
+                    ? 'No verified donations recorded yet. Be the first to contribute!'
+                    : 'No verified donations found for this student year.'}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {donations.map((d) => (
+                  {filteredDonations.map((d) => (
                     <div
                       key={d.id}
                       className="p-4 rounded-2xl bg-slate-900/70 border border-amber-500/20 hover:border-amber-500/40 transition space-y-2 relative overflow-hidden"
