@@ -33,12 +33,17 @@ def seed_demo_data():
                 target_amount=100000.0,
                 upi_id="vinayaka@upi",
                 upi_name="Vinayaka Chavithi Committee",
+                admin_id=admin.id,
                 public_slug="vinayaka-chavithi-2026",
                 start_date=date(2026, 8, 1),
                 end_date=date(2026, 9, 5),
                 is_active=True
             )
             db.add(fund)
+            db.commit()
+            db.refresh(fund)
+        elif fund.admin_id is None:
+            fund.admin_id = admin.id
             db.commit()
             db.refresh(fund)
 

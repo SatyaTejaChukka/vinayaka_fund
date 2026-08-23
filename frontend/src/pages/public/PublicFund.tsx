@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   Heart, ArrowUpRight, ArrowDownLeft, 
-  Wallet, CheckCircle2, Clock, Layers, Calendar, Filter
+  Wallet, CheckCircle2, Clock, Layers, Calendar,
+  Download, GraduationCap, Sparkles, Filter, Banknote
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
@@ -11,11 +12,25 @@ import { UPIPayModal } from '../../components/UPIPayModal';
 import { CashPayModal } from '../../components/CashPayModal';
 import { PrintableQRPoster } from '../../components/PrintableQRPoster';
 import { LogoMark } from '../../components/LogoMark';
+import { TableSkeleton, CardSkeleton } from '../../components/LoadingSkeleton';
+import { EmptyState } from '../../components/EmptyState';
+import { useToast } from '../../context/ToastContext';
+import { exportToCsv, type CsvColumn } from '../../utils/csvExporter';
 import { publicApi } from '../../services/api';
 import type { FundSummary, PublicDonation, PublicExpense } from '../../types';
 
+const PUBLIC_ACADEMIC_YEARS = [
+  'ALL_YEARS',
+  '1st Year (I)',
+  '2nd Year (II)',
+  '3rd Year (III)',
+  '4th Year (IV)',
+  'Other / General'
+];
+
 export const PublicFund: React.FC = () => {
-  const { slug = 'vinayaka-chavithi-2026' } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ slug: string }>();
+  const toast = useToast();
 
   const [fund, setFund] = useState<FundSummary | null>(null);
   const [donations, setDonations] = useState<PublicDonation[]>([]);
@@ -27,17 +42,14 @@ export const PublicFund: React.FC = () => {
   const [isCashOpen, setIsCashOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
-  const [selectedStudentYear, setSelectedStudentYear] = useState<string>('ALL');
-
-  const studentYears = Array.from(
-    new Set(donations.map((donation) => donation.student_year).filter(Boolean) as string[])
-  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-
-  const filteredDonations = selectedStudentYear === 'ALL'
-    ? donations
-    : donations.filter((donation) => donation.student_year === selectedStudentYear);
+  const [selectedYear, setSelectedYear] = useState<string>('ALL_YEARS');
 
   const fetchFundData = async () => {
+    if (!slug) {
+      setError('Invalid public link. Please use a valid fund URL.');
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError('');
@@ -51,6 +63,7 @@ export const PublicFund: React.FC = () => {
       setExpenses(expRes);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load transparency details.');
+      toast.error('Failed to load fund transparency data.');
     } finally {
       setLoading(false);
     }
@@ -60,23 +73,78 @@ export const PublicFund: React.FC = () => {
     fetchFundData();
   }, [slug]);
 
+  const filteredDonations = donations.filter((d) => {
+    if (selectedYear === 'ALL_YEARS') return true;
+    if (selectedYear === 'Other / General') {
+      return !d.student_year || d.student_year === 'Other' || d.student_year === 'General';
+    }
+    return d.student_year === selectedYear;
+  });
+
+  const handleExportDonationsCsv = () => {
+    if (filteredDonations.length === 0) {
+      toast.warning('No verified donations available to export.');
+      return;
+    }
+
+    const columns: CsvColumn<PublicDonation>[] = [
+      { header: 'ID', accessor: (d) => d.id },
+      { header: 'Donor Name', accessor: (d) => d.donor_name },
+      { header: 'Academic Year / Role', accessor: (d) => d.student_year || 'General / Unspecified' },
+      { header: 'Amount (INR)', accessor: (d) => d.amount },
+      { header: 'Donation Date', accessor: (d) => d.donation_date },
+      { header: 'Status', accessor: (d) => d.status }
+    ];
+
+    const fileSlug = fund?.public_slug || 'vinayaka';
+    exportToCsv(filteredDonations, columns, `${fileSlug}_verified_donations`);
+    toast.success(`Exported ${filteredDonations.length} public donations to CSV!`);
+  };
+
+  const handleExportExpensesCsv = () => {
+    if (expenses.length === 0) {
+      toast.warning('No expenses available to export.');
+      return;
+    }
+
+    const columns: CsvColumn<PublicExpense>[] = [
+      { header: 'ID', accessor: (e) => e.id },
+      { header: 'Expense Purpose', accessor: (e) => e.purpose },
+      { header: 'Amount (INR)', accessor: (e) => e.amount },
+      { header: 'Handled / Managed By', accessor: (e) => e.handled_by },
+      { header: 'Expense Date', accessor: (e) => e.expense_date },
+      { header: 'Status', accessor: (e) => e.status },
+      { header: 'Description', accessor: (e) => e.description || '' }
+    ];
+
+    const fileSlug = fund?.public_slug || 'vinayaka';
+    exportToCsv(expenses, columns, `${fileSlug}_public_expenses`);
+    toast.success(`Exported ${expenses.length} expense records to CSV!`);
+  };
+
   const formatINR = (val: number) => {
+    const safeVal = Number.isFinite(val) ? val : 0;
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(val);
+    }).format(safeVal);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen festive-bg text-white flex flex-col items-center justify-center p-4">
-        <div className="w-18 h-18 flex items-center justify-center diya-pulse mb-4">
-          <LogoMark className="w-full h-full" />
+      <div className="min-h-screen festive-bg text-white flex flex-col p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
+        <div className="flex items-center justify-between py-4 border-b border-amber-500/20">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-slate-800 animate-pulse" />
+            <div className="w-48 h-6 bg-slate-800 rounded-lg animate-pulse" />
+          </div>
+          <div className="w-32 h-10 bg-amber-500/20 rounded-xl animate-pulse" />
         </div>
-        <p className="text-amber-300 font-bold animate-pulse text-lg">
-          Loading Vinayaka Chavithi Transparency Portal...
-        </p>
+        <CardSkeleton count={4} />
+        <div className="p-8 rounded-3xl festive-glass border border-amber-500/20">
+          <TableSkeleton rows={4} columns={4} />
+        </div>
       </div>
     );
   }
@@ -84,13 +152,13 @@ export const PublicFund: React.FC = () => {
   if (error || !fund) {
     return (
       <div className="min-h-screen festive-bg text-white flex flex-col items-center justify-center p-4">
-        <div className="p-8 max-w-md rounded-3xl festive-glass border border-rose-500/30 text-center space-y-4">
+        <div className="p-8 max-w-md rounded-3xl festive-glass border border-rose-500/30 text-center space-y-4 shadow-2xl">
           <span className="text-4xl">⚠️</span>
           <h2 className="text-xl font-bold text-rose-300">Fund Details Unavailable</h2>
           <p className="text-xs text-slate-300">{error || 'Could not find requested fund.'}</p>
           <button
             onClick={fetchFundData}
-            className="px-6 py-2.5 rounded-xl font-bold gold-button text-sm"
+            className="px-6 py-2.5 rounded-xl font-bold gold-button text-sm active:scale-95 transition"
           >
             Retry Loading
           </button>
@@ -98,6 +166,9 @@ export const PublicFund: React.FC = () => {
       </div>
     );
   }
+
+  const safeCollectionPercentage = Number.isFinite(fund.collection_percentage) ? fund.collection_percentage : 0;
+  const safeExpensePercentage = Number.isFinite(fund.expense_percentage) ? fund.expense_percentage : 0;
 
   return (
     <div className="min-h-screen festive-bg text-slate-100 flex flex-col pb-16 overflow-x-hidden w-full">
@@ -118,174 +189,225 @@ export const PublicFund: React.FC = () => {
             <span className="truncate">Official Transparency Dashboard</span>
           </div>
 
-          <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight break-words">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-gold-gradient tracking-tight px-2 leading-tight">
             {fund.name}
           </h1>
 
-          <p className="text-xs sm:text-base text-slate-300 max-w-2xl mx-auto">
-            {fund.description || 'Every rupee collected and every rupee spent is visible to the public.'}
-          </p>
-
+          {fund.description && (
+            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed px-4">
+              {fund.description}
+            </p>
+          )}
         </section>
 
-        {/* Collection Target Progress Bar */}
+        {/* Fund Collection Progress Bar (Prominent Full Width) */}
         <section>
           <ProgressBar
-            collected={fund.total_collected}
+            title="Fund Collection Progress"
+            badgeText="Live"
+            badgeVariant="emerald"
+            percentage={safeCollectionPercentage}
             target={fund.target_amount}
-            percentage={fund.collection_percentage}
+            collected={fund.total_collected}
+            labelRight="Raised of Target"
+            barColor="amber"
             onBarClick={() => {
-              setActiveTab('donations');
-              document.getElementById('donations-section')?.scrollIntoView({ behavior: 'smooth' });
+              const el = document.getElementById('donations-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
           />
         </section>
 
-        {/* Financial Overview Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* 3 Financial Metric Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
           <StatCard
             title="TOTAL COLLECTED"
             amount={fund.total_collected}
             subtitle={`${fund.verified_donations_count} verified donations`}
-            icon={<ArrowUpRight className="w-6 h-6 text-amber-400" />}
+            badge={`${safeCollectionPercentage}%`}
+            icon={<ArrowUpRight className="w-5 h-5 text-amber-400" />}
             variant="amber"
-            badge={`${fund.collection_percentage}%`}
           />
 
           <StatCard
             title="TOTAL SPENT"
             amount={fund.total_spent}
             subtitle={`${fund.expenses_count} expenses recorded`}
-            icon={<ArrowDownLeft className="w-6 h-6 text-rose-400" />}
+            badge={`${safeExpensePercentage}% spent`}
+            icon={<ArrowDownLeft className="w-5 h-5 text-rose-400" />}
             variant="rose"
-            badge={`${fund.expense_percentage}% spent`}
           />
 
           <StatCard
             title="AVAILABLE BALANCE"
             amount={fund.available_balance}
             subtitle={`Committed balance after pending: ${formatINR(fund.committed_balance)}`}
-            icon={<Wallet className="w-6 h-6 text-emerald-400" />}
-            variant="emerald"
             badge="Live"
+            icon={<Wallet className="w-5 h-5 text-emerald-400" />}
+            variant="emerald"
           />
         </section>
 
-        {/* Fund Utilization Progress & Breakdown */}
-        <section className="p-4 sm:p-6 rounded-2xl festive-glass border border-amber-500/20 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-center">
-          <div className="lg:col-span-2 space-y-2">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-400">
+        {/* Fund Utilization Efficiency & Action Buttons Section */}
+        <section className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-xl">
+          
+          {/* Left Column: Utilization Info & Mini Bar */}
+          <div className="flex-1 space-y-2.5 min-w-0">
+            <span className="text-[11px] sm:text-xs uppercase font-extrabold tracking-wider text-amber-400 block">
               Fund Utilization Efficiency
             </span>
-            <h3 className="text-lg sm:text-xl font-bold text-white">
+            <h3 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-tight">
               {formatINR(fund.total_spent)} spent from {formatINR(fund.total_collected)} collected
             </h3>
             <p className="text-xs text-slate-300">
-              Pending expense commitments of <span className="font-bold text-amber-300">{formatINR(fund.pending_expenses)}</span> planned for festival immersion & sanitation.
+              Pending expense commitments of <strong className="text-purple-300 font-bold">{formatINR(fund.pending_expenses)}</strong> planned for festival immersion & sanitation.
             </p>
 
-            <div className="w-full h-3 rounded-full bg-slate-900 overflow-hidden border border-slate-700/50 mt-3">
+            {/* Thin Progress Bar */}
+            <div className="w-full h-2.5 sm:h-3 rounded-full bg-slate-950/90 p-0.5 border border-amber-500/30 relative overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-400 transition-all duration-700"
-                style={{ width: `${Math.min(100, fund.expense_percentage)}%` }}
+                className="h-full rounded-full transition-all duration-1000 shadow-inner"
+                style={{
+                  width: `${Math.min(100, Math.max(2, safeExpensePercentage))}%`,
+                  background: 'linear-gradient(90deg, #10b981 0%, #ffb703 50%, #f43f5e 100%)'
+                }}
               />
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 sm:gap-3 justify-center">
+          {/* Right Column: Action Buttons (UPI QR, Cash, Shareable Flyer) */}
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 w-full lg:w-72">
             <button
               onClick={() => setIsDonateOpen(true)}
-              className="py-3 px-5 sm:py-3.5 sm:px-6 rounded-xl font-extrabold gold-button flex items-center justify-center gap-2 text-xs sm:text-sm shadow-xl"
+              className="w-full py-3 px-5 rounded-xl font-extrabold gold-button text-xs sm:text-sm shadow-xl active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Heart className="w-4 h-4 fill-amber-950" />
               <span>Donate via UPI QR</span>
             </button>
 
             <button
+              onClick={() => setIsCashOpen(true)}
+              className="w-full py-2.5 px-4 rounded-xl font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition"
+            >
+              <Banknote className="w-4 h-4 text-emerald-400" />
+              <span>Donate by Cash</span>
+            </button>
+
+            <button
               onClick={() => setIsShareOpen(true)}
-              className="py-2.5 px-5 sm:py-3 sm:px-6 rounded-xl font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs sm:text-sm flex items-center justify-center gap-2 transition"
+              className="w-full py-2.5 px-4 rounded-xl font-bold bg-slate-900/80 hover:bg-slate-900 text-amber-300 border border-amber-500/30 text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition"
             >
               <Layers className="w-4 h-4" />
               <span>Get Shareable Flyer QR</span>
             </button>
           </div>
+
         </section>
 
         {/* Tabbed Transaction Register */}
-        <section id="donations-section" className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 sm:space-y-6">
+        <section id="donations-section" className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 sm:space-y-6 shadow-xl">
           
-          {/* Tab Selector */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-amber-500/20 pb-3 gap-2">
-            <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2">
+          {/* Tab Selector & Export Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-amber-500/20 pb-4 gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveTab('donations')}
-                className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 active:scale-95 ${
+                className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 active:scale-95 ${
                   activeTab === 'donations'
                     ? 'gold-button text-amber-950 shadow-lg'
                     : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-700/60'
                 }`}
               >
                 <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="truncate">Donations ({filteredDonations.length})</span>
+                <span>Verified Donations ({donations.length})</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('expenses')}
-                className={`px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 active:scale-95 ${
+                className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 active:scale-95 ${
                   activeTab === 'expenses'
                     ? 'gold-button text-amber-950 shadow-lg'
                     : 'bg-slate-900/60 text-slate-300 hover:text-white border border-slate-700/60'
                 }`}
               >
                 <ArrowDownLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span className="truncate">Expenses ({expenses.length})</span>
+                <span>Expenses ({expenses.length})</span>
               </button>
             </div>
 
-            <span className="text-[10px] sm:text-xs text-slate-400 font-medium">
-              Only verified transactions are publicly listed
-            </span>
+            {/* CSV Export Button for active tab */}
+            <div className="flex items-center gap-2">
+              {activeTab === 'donations' ? (
+                <button
+                  onClick={handleExportDonationsCsv}
+                  disabled={filteredDonations.length === 0}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed ml-auto"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Donations CSV</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleExportExpensesCsv}
+                  disabled={expenses.length === 0}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center gap-1.5 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed ml-auto"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Expenses CSV</span>
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Academic Year Filter Pills (For Donations Tab) */}
+          {activeTab === 'donations' && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+              <div className="flex items-center gap-1 text-xs text-amber-300 font-bold shrink-0 mr-1">
+                <GraduationCap className="w-4 h-4" />
+                <span className="hidden sm:inline">Filter Batch:</span>
+              </div>
+              {PUBLIC_ACADEMIC_YEARS.map((year) => (
+                <button
+                  key={year}
+                  onClick={() => setSelectedYear(year)}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${
+                    selectedYear === year
+                      ? 'bg-amber-500 text-slate-950 shadow-md'
+                      : 'bg-slate-900/60 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  {year === 'ALL_YEARS' ? 'All Batches' : year}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Donations Tab View */}
           {activeTab === 'donations' && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl bg-slate-900/50 border border-amber-500/20">
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-200">
-                  <Filter className="w-4 h-4 text-amber-400" />
-                  <span>Filter by student year</span>
-                </div>
-                <select
-                  value={selectedStudentYear}
-                  onChange={(event) => setSelectedStudentYear(event.target.value)}
-                  className="w-full sm:w-auto min-w-[190px] px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-semibold focus:outline-none focus:border-amber-400"
-                  aria-label="Filter donations by student year"
-                >
-                  <option value="ALL">All Years ({donations.length})</option>
-                  {studentYears.map((year) => (
-                    <option key={year} value={year}>
-                      {year} ({donations.filter((donation) => donation.student_year === year).length})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               {filteredDonations.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-sm">
-                  {donations.length === 0
-                    ? 'No verified donations recorded yet. Be the first to contribute!'
-                    : 'No verified donations found for this student year.'}
-                </div>
+                <EmptyState
+                  icon={Filter}
+                  emoji="🙏"
+                  title="No Donations in this Category"
+                  description={
+                    selectedYear !== 'ALL_YEARS'
+                      ? `No verified donations found for "${selectedYear}".`
+                      : 'No verified donations recorded yet. Be the first to contribute!'
+                  }
+                  actionText={selectedYear !== 'ALL_YEARS' ? 'Show All Batches' : undefined}
+                  onAction={selectedYear !== 'ALL_YEARS' ? () => setSelectedYear('ALL_YEARS') : undefined}
+                />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredDonations.map((d) => (
                     <div
                       key={d.id}
-                      className="p-4 rounded-2xl bg-slate-900/70 border border-amber-500/20 hover:border-amber-500/40 transition space-y-2 relative overflow-hidden"
+                      className="p-4 rounded-2xl bg-slate-900/70 border border-amber-500/20 hover:border-amber-500/40 transition space-y-2 relative overflow-hidden shadow-md"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="font-bold text-white text-sm sm:text-base break-words pr-2 block">
+                        <div className="min-w-0 flex-1">
+                          <span className="font-bold text-white text-sm sm:text-base break-words block truncate">
                             {d.donor_name}
                           </span>
                           {d.student_year && (
@@ -300,7 +422,7 @@ export const PublicFund: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="flex items-baseline justify-between pt-1">
+                      <div className="flex items-baseline justify-between pt-1 border-t border-slate-800/80">
                         <span className="text-xl font-extrabold text-amber-400">
                           {formatINR(d.amount)}
                         </span>
@@ -320,9 +442,12 @@ export const PublicFund: React.FC = () => {
           {activeTab === 'expenses' && (
             <div className="space-y-4">
               {expenses.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-sm">
-                  No expenses recorded yet.
-                </div>
+                <EmptyState
+                  icon={Wallet}
+                  emoji="📋"
+                  title="No Expenses Documented"
+                  description="All celebration expenses (idol, flowers, sound, lighting, prasadam) will be publicly accounted for here."
+                />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {expenses.map((e) => (

@@ -17,6 +17,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
+  const [publicSlug, setPublicSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
@@ -25,6 +26,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
       try {
         const currentUser = await adminApi.getCurrentUser();
         setUser(currentUser);
+        try {
+          const fund = await adminApi.getCurrentFund();
+          setPublicSlug(fund.public_slug);
+        } catch {
+          setPublicSlug(null);
+        }
       } catch {
         adminApi.logout();
         navigate('/admin/login');
@@ -134,12 +141,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
           {/* User Profile & Actions Footer */}
           <div className="pt-3 border-t border-amber-500/20 space-y-2.5">
             <a
-              href="/fund/vinayaka-chavithi-2026"
+              href={publicSlug ? `/fund/${publicSlug}` : '/admin/fund-settings'}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition"
             >
-              <span>Public Page View</span>
+              <span>{publicSlug ? 'Public Page View' : 'Create Public Slug'}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
 

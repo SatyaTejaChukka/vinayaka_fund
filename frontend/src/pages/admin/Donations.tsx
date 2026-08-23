@@ -1,13 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { Search, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, RefreshCw, CheckCircle2, XCircle, Download, Filter, GraduationCap } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
-import { adminApi, publicApi } from '../../services/api';
+import { TableSkeleton } from '../../components/LoadingSkeleton';
+import { EmptyState } from '../../components/EmptyState';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
+import { exportToCsv, type CsvColumn } from '../../utils/csvExporter';
+import { adminApi } from '../../services/api';
 import type { AdminDonation } from '../../types';
 
+const ACADEMIC_YEARS = [
+  'ALL_YEARS',
+  '1st Year (I)',
+  '2nd Year (II)',
+  '3rd Year (III)',
+  '4th Year (IV)',
+  'Other / General'
+];
+
 export const AdminDonations: React.FC = () => {
+  const toast = useToast();
+  const { confirm } = useConfirm();
+
   const [donations, setDonations] = useState<AdminDonation[]>([]);
+  const [setupRequired, setSetupRequired] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
+  const [yearFilter, setYearFilter] = useState<string>('ALL_YEARS');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Void Modal State
@@ -17,14 +36,21 @@ export const AdminDonations: React.FC = () => {
   const loadDonations = async () => {
     try {
       setLoading(true);
-      const summary = await publicApi.getFundSummary('vinayaka-chavithi-2026');
+      const summary = await adminApi.getCurrentFund();
 
       const list = await adminApi.getAdminDonations(
         summary.id,
         activeFilter === 'ALL' ? undefined : activeFilter
       );
       setDonations(list);
-    } catch (err) {
+      setSetupRequired(false);
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        setDonations([]);
+        setSetupRequired(true);
+      } else {
+        toast.error('Failed to load donations register from server.');
+      }
       console.error('Failed to load donations:', err);
     } finally {
       setLoading(false);
@@ -38,19 +64,28 @@ export const AdminDonations: React.FC = () => {
   const handleVerify = async (id: number) => {
     try {
       await adminApi.verifyDonation(id);
+      toast.success(`Donation #${id} has been verified and added to balance!`);
       loadDonations();
-    } catch (err) {
-      alert('Verification failed');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to verify donation.');
     }
   };
 
   const handleReject = async (id: number) => {
-    if (!confirm('Reject this donation entry?')) return;
+    const confirmed = await confirm({
+      title: 'Reject Donation Submission?',
+      message: `Are you sure you want to reject donation submission #${id}? This entry will be marked as rejected in the records.`,
+      confirmText: 'Reject Submission',
+      type: 'danger'
+    });
+    if (!confirmed) return;
+
     try {
       await adminApi.rejectDonation(id);
+      toast.warning(`Donation #${id} rejected.`);
       loadDonations();
-    } catch (err) {
-      alert('Rejection failed');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Rejection failed.');
     }
   };
 
@@ -59,22 +94,64 @@ export const AdminDonations: React.FC = () => {
     if (!voidingId || !voidReason.trim()) return;
     try {
       await adminApi.voidDonation(voidingId, voidReason.trim());
+      toast.info(`Transaction #${voidingId} has been voided.`);
       setVoidingId(null);
       setVoidReason('');
       loadDonations();
-    } catch (err) {
-      alert('Void transaction failed');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Void transaction failed.');
     }
   };
 
   const filteredDonations = donations.filter((d) => {
+    // Search matching
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch =
       d.donor_name.toLowerCase().includes(term) ||
       (d.upi_transaction_id && d.upi_transaction_id.toLowerCase().includes(term)) ||
-      (d.description && d.description.toLowerCase().includes(term))
-    );
+      (d.description && d.description.toLowerCase().includes(term));
+
+    // Academic year matching
+    let matchesYear = true;
+    if (yearFilter === 'Other / General') {
+      matchesYear = !d.student_year || d.student_year === 'Other' || d.student_year === 'General';
+    } else if (yearFilter !== 'ALL_YEARS') {
+      matchesYear = d.student_year === yearFilter;
+    }
+
+    return matchesSearch && matchesYear;
   });
+
+  const handleExportCsv = () => {
+    if (filteredDonations.length === 0) {
+      toast.warning('No donations available to export with current filters.');
+      return;
+    }
+
+    const columns: CsvColumn<AdminDonation>[] = [
+      { header: 'ID', accessor: (d) => d.id },
+      { header: 'Donor Name', accessor: (d) => d.donor_name },
+      { header: 'Studying Year / Role', accessor: (d) => d.student_year || 'General / Unspecified' },
+      { header: 'Amount (INR)', accessor: (d) => d.amount },
+      { header: 'Payment Method', accessor: (d) => d.payment_method },
+      { header: 'Transaction / Ref ID', accessor: (d) => d.upi_transaction_id || 'CASH' },
+      { header: 'Submission Date', accessor: (d) => d.donation_date },
+      { header: 'Status', accessor: (d) => d.status },
+      { header: 'Public Display', accessor: (d) => (d.show_donor_name ? 'Visible' : 'Anonymous') },
+      { header: 'Description / Note', accessor: (d) => d.description || '' },
+      { header: 'Verified Date', accessor: (d) => d.verified_at || '' },
+      { header: 'Void Reason', accessor: (d) => d.void_reason || '' }
+    ];
+
+    exportToCsv(filteredDonations, columns, 'vinayaka_donations_register');
+    toast.success(`Exported ${filteredDonations.length} donation records to CSV!`);
+  };
+
+  const handleResetFilters = () => {
+    setActiveFilter('ALL');
+    setYearFilter('ALL_YEARS');
+    setSearchTerm('');
+  };
 
   const formatINR = (val: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -88,22 +165,41 @@ export const AdminDonations: React.FC = () => {
     <AdminLayout title="Donation Register & Verification">
       
       {/* Search & Filter Header */}
-      <div className="p-4 rounded-2xl festive-glass border border-amber-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 rounded-2xl festive-glass border border-amber-500/20 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         
-        {/* Search Bar */}
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search donor name or UPI ref..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
-          />
+        {/* Search Bar & Year Filter */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+          {/* Search Bar */}
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search donor, ref, or note..."
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+            />
+          </div>
+
+          {/* Student Academic Year Dropdown */}
+          <div className="relative w-full sm:w-52">
+            <GraduationCap className="w-4 h-4 text-amber-400 absolute left-3.5 top-3 pointer-events-none" />
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(e.target.value)}
+              className="w-full pl-10 pr-8 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-amber-300 text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer appearance-none"
+            >
+              {ACADEMIC_YEARS.map((y) => (
+                <option key={y} value={y} className="bg-slate-900 text-white font-medium">
+                  {y === 'ALL_YEARS' ? '🎓 All Academic Years' : `🎓 ${y}`}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+        {/* Status Filter Pills & Actions */}
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0">
           {['ALL', 'PENDING', 'VERIFIED', 'REJECTED', 'VOIDED'].map((filter) => (
             <button
               key={filter}
@@ -117,10 +213,22 @@ export const AdminDonations: React.FC = () => {
               {filter}
             </button>
           ))}
+
+          {/* CSV Export Button */}
+          <button
+            onClick={handleExportCsv}
+            disabled={loading || filteredDonations.length === 0}
+            className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Download safe CSV of current view"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </button>
           
+          {/* Refresh Button */}
           <button
             onClick={loadDonations}
-            className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition shrink-0 active:scale-95 ml-auto sm:ml-2"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition shrink-0 active:scale-95 ml-auto lg:ml-1"
             title="Refresh List"
           >
             <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -129,19 +237,33 @@ export const AdminDonations: React.FC = () => {
 
       </div>
 
-      {/* Donations Table */}
+      {/* Donations Table View */}
       <div className="rounded-3xl festive-glass border border-amber-500/20 overflow-hidden shadow-2xl">
-        {loading ? (
-          <div className="py-12 text-center text-amber-300 text-sm animate-pulse">
-            Loading Donation Records...
+        {setupRequired ? (
+          <EmptyState
+            emoji="⚙️"
+            title="Fund Setup Required"
+            description="No active celebration fund is configured for this admin account."
+            actionText="Go to Fund Settings"
+            onAction={() => (window.location.href = '/admin/fund-settings')}
+          />
+        ) : loading ? (
+          <div className="p-6">
+            <TableSkeleton rows={6} columns={6} />
           </div>
         ) : filteredDonations.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-sm">
-            No donation records match the selected filter.
+          <div className="p-6">
+            <EmptyState
+              icon={Filter}
+              title="No Matching Donations"
+              description={`No donation records found matching status "${activeFilter}" and academic year "${yearFilter === 'ALL_YEARS' ? 'All Years' : yearFilter}".`}
+              actionText="Reset Search & Filters"
+              onAction={handleResetFilters}
+            />
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] text-left text-xs">
+            <table className="w-full min-w-[650px] text-left text-xs">
               <thead className="bg-slate-900/90 border-b border-amber-500/20 text-slate-300 uppercase tracking-wider font-extrabold">
                 <tr>
                   <th className="p-4">Donor</th>

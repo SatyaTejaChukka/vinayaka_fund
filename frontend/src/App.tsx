@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { ToastProvider } from './context/ToastContext';
+import { ConfirmProvider } from './context/ConfirmContext';
 import { PublicFund } from './pages/public/PublicFund';
 import { AdminLogin } from './pages/admin/Login';
 import { AdminDashboard } from './pages/admin/Dashboard';
@@ -57,24 +59,28 @@ const CampaignLanding: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Neutral entry point: campaign links must identify their own slug. */}
-        <Route path="/" element={<CampaignLanding />} />
-        <Route path="/fund/:slug" element={<PublicFund />} />
+    <ToastProvider>
+      <ConfirmProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<CampaignLanding />} />
+            <Route path="/fund/:slug" element={<PublicFund />} />
 
-        {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/donations" element={<AdminDonations />} />
-        <Route path="/admin/expenses" element={<AdminExpenses />} />
-        <Route path="/admin/fund-settings" element={<FundSettings />} />
-        <Route path="/admin/audit-logs" element={<AuditLogs />} />
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/donations" element={<AdminDonations />} />
+            <Route path="/admin/expenses" element={<AdminExpenses />} />
+            <Route path="/admin/fund-settings" element={<FundSettings />} />
+            <Route path="/admin/audit-logs" element={<AuditLogs />} />
 
-        {/* Unknown routes must not fall back to a specific campaign. */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ConfirmProvider>
+    </ToastProvider>
   );
 };
 

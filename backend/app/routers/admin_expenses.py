@@ -13,6 +13,25 @@ from app.services.audit_service import log_action
 
 router = APIRouter(tags=["Admin Expenses"])
 
+def get_owned_fund(db: Session, fund_id: int, current_admin: User) -> Fund:
+    fund = db.query(Fund).filter(Fund.id == fund_id, Fund.admin_id == current_admin.id).first()
+    if not fund:
+        raise HTTPException(status_code=404, detail="Fund not found")
+    return fund
+
+
+def get_owned_expense(db: Session, expense_id: int, current_admin: User) -> Expense:
+    expense = (
+        db.query(Expense)
+        .join(Fund, Expense.fund_id == Fund.id)
+        .filter(Expense.id == expense_id, Fund.admin_id == current_admin.id)
+        .first()
+    )
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return expense
+
+
 @router.get("/api/admin/funds/{fund_id}/expenses", response_model=List[AdminExpenseResponse])
 def list_admin_expenses(
     fund_id: int,
@@ -20,6 +39,7 @@ def list_admin_expenses(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
+    get_owned_fund(db, fund_id, current_admin)
     query = db.query(Expense).filter(Expense.fund_id == fund_id)
     if status:
         query = query.filter(Expense.status == status.upper())
@@ -32,9 +52,7 @@ def create_expense(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="Fund not found")
+    get_owned_fund(db, fund_id, current_admin)
 
     expense = Expense(
         fund_id=fund_id,
@@ -59,9 +77,7 @@ def mark_expense_spent(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    expense = db.query(Expense).filter(Expense.id == expense_id).first()
-    if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
+    expense = get_owned_expense(db, expense_id, current_admin)
 
     old_status = expense.status
     expense.status = "SPENT"
@@ -79,9 +95,7 @@ def void_expense(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    expense = db.query(Expense).filter(Expense.id == expense_id).first()
-    if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
+    expense = get_owned_expense(db, expense_id, current_admin)
 
     old_status = expense.status
     expense.status = "VOIDED"

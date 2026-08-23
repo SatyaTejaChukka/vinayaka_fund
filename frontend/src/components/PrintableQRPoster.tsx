@@ -33,11 +33,12 @@ export const PrintableQRPoster: React.FC<PrintableQRPosterProps> = ({
   };
 
   const formatINR = (val: number) => {
+    const safeVal = Number.isFinite(val) ? val : 0;
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(val);
+    }).format(safeVal);
   };
 
   return (

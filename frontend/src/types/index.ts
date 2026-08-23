@@ -1,9 +1,19 @@
-export interface FundSummary {
+export interface FundConfig {
   id: number;
-  name: str;
+  name: string;
   year: number;
   description?: string;
   target_amount: number;
+  upi_id: string;
+  upi_name: string;
+  public_slug: string;
+  start_date?: string;
+  end_date?: string;
+  is_active: boolean;
+}
+
+export interface FundSummary extends FundConfig {
+  id: number;
   total_collected: number;
   total_spent: number;
   pending_expenses: number;
@@ -13,16 +23,9 @@ export interface FundSummary {
   expense_percentage: number;
   verified_donations_count: number;
   expenses_count: number;
-  upi_id: string;
-  upi_name: string;
-  notification_email?: string;
-  public_slug: string;
-  start_date?: string;
-  end_date?: string;
-  is_active: boolean;
 }
 
-export type str = string;
+
 
 export interface PublicDonation {
   id: number;

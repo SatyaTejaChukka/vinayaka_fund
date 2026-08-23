@@ -66,7 +66,6 @@ def calculate_fund_summary(db: Session, fund: Fund) -> PublicFundSummary:
         expenses_count=expenses_count,
         upi_id=fund.upi_id,
         upi_name=fund.upi_name,
-        notification_email=fund.notification_email,
         public_slug=fund.public_slug,
         start_date=fund.start_date,
         end_date=fund.end_date,

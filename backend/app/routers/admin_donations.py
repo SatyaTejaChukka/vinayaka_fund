@@ -13,6 +13,25 @@ from app.services.audit_service import log_action
 
 router = APIRouter(tags=["Admin Donations"])
 
+def get_owned_fund(db: Session, fund_id: int, current_admin: User) -> Fund:
+    fund = db.query(Fund).filter(Fund.id == fund_id, Fund.admin_id == current_admin.id).first()
+    if not fund:
+        raise HTTPException(status_code=404, detail="Fund not found")
+    return fund
+
+
+def get_owned_donation(db: Session, donation_id: int, current_admin: User) -> Donation:
+    donation = (
+        db.query(Donation)
+        .join(Fund, Donation.fund_id == Fund.id)
+        .filter(Donation.id == donation_id, Fund.admin_id == current_admin.id)
+        .first()
+    )
+    if not donation:
+        raise HTTPException(status_code=404, detail="Donation not found")
+    return donation
+
+
 @router.get("/api/admin/funds/{fund_id}/donations", response_model=List[AdminDonationResponse])
 def list_admin_donations(
     fund_id: int,
@@ -20,6 +39,7 @@ def list_admin_donations(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
+    get_owned_fund(db, fund_id, current_admin)
     query = db.query(Donation).filter(Donation.fund_id == fund_id)
     if status:
         query = query.filter(Donation.status == status.upper())
@@ -32,9 +52,7 @@ def create_manual_donation(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="Fund not found")
+    get_owned_fund(db, fund_id, current_admin)
 
     donation = Donation(
         fund_id=fund_id,
@@ -64,9 +82,7 @@ def verify_donation(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    donation = db.query(Donation).filter(Donation.id == donation_id).first()
-    if not donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+    donation = get_owned_donation(db, donation_id, current_admin)
 
     old_status = donation.status
     donation.status = "VERIFIED"
@@ -85,9 +101,7 @@ def reject_donation(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    donation = db.query(Donation).filter(Donation.id == donation_id).first()
-    if not donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+    donation = get_owned_donation(db, donation_id, current_admin)
 
     old_status = donation.status
     donation.status = "REJECTED"
@@ -105,9 +119,7 @@ def void_donation(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
-    donation = db.query(Donation).filter(Donation.id == donation_id).first()
-    if not donation:
-        raise HTTPException(status_code=404, detail="Donation not found")
+    donation = get_owned_donation(db, donation_id, current_admin)
 
     old_status = donation.status
     donation.status = "VOIDED"

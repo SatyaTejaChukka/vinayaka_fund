@@ -37,7 +37,7 @@ def startup_db_seed():
         # Auto-migrate missing columns on startup (safe for PostgreSQL & SQLite)
         for migration_sql in [
             "ALTER TABLE donations ADD COLUMN student_year VARCHAR",
-            "ALTER TABLE funds ADD COLUMN notification_email VARCHAR"
+            "ALTER TABLE funds ADD COLUMN admin_id INTEGER"
         ]:
             try:
                 db.execute(text(migration_sql))
@@ -59,6 +59,17 @@ def startup_db_seed():
             db.commit()
             print(f"Created default admin user: {settings.ADMIN_EMAIL}")
 
+        # Only reassign orphaned funds (admin_id IS NULL) to the seed admin.
+        # This is a one-time migration guard; new funds always get admin_id on creation.
+        orphaned_count = db.execute(text("SELECT COUNT(*) FROM funds WHERE admin_id IS NULL")).scalar()
+        if orphaned_count and orphaned_count > 0:
+            db.execute(
+                text("UPDATE funds SET admin_id = :admin_id WHERE admin_id IS NULL"),
+                {"admin_id": admin.id}
+            )
+            db.commit()
+            print(f"Migrated {orphaned_count} orphaned fund(s) to seed admin ({admin.email})")
+
         # Check if default fund exists
         fund = db.query(Fund).filter(Fund.public_slug == "vinayaka-chavithi-2026").first()
         if not fund:
@@ -69,6 +80,7 @@ def startup_db_seed():
                 target_amount=100000.0,
                 upi_id="vinayaka@example",
                 upi_name="Vinayaka Chavithi Committee",
+                admin_id=admin.id,
                 public_slug="vinayaka-chavithi-2026",
                 is_active=True
             )
@@ -91,8 +103,7 @@ def root():
     return {
         "message": "Welcome to Vinayaka Chavithi Fund Transparency API",
         "docs_url": "/docs",
-        "health_check": "/api/health",
-        "public_slug": "vinayaka-chavithi-2026"
+        "health_check": "/api/health"
     }
 
 @app.api_route("/health", methods=["GET", "HEAD"])

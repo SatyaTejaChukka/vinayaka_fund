@@ -4,14 +4,14 @@ import { QrCode, Banknote, HeartHandshake, LayoutDashboard } from 'lucide-react'
 import { LogoMark } from './LogoMark';
 
 interface NavbarProps {
-  slug?: string;
+  slug: string;
   onOpenDonateModal?: () => void;
   onOpenCashModal?: () => void;
   onOpenShareModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  slug = 'vinayaka-chavithi-2026',
+  slug,
   onOpenDonateModal,
   onOpenCashModal,
   onOpenShareModal

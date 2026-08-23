@@ -12,4 +12,10 @@ router = APIRouter(prefix="/api/admin/audit-logs", tags=["Admin Audit Logs"])
 
 @router.get("", response_model=List[AuditLogResponse])
 def list_audit_logs(db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
-    return db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(100).all()
+    return (
+        db.query(AuditLog)
+        .filter(AuditLog.user_id == current_admin.id)
+        .order_by(AuditLog.created_at.desc())
+        .limit(100)
+        .all()
+    )

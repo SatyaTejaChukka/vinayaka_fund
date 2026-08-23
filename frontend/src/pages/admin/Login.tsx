@@ -8,8 +8,8 @@ export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState<boolean>(false);
   const [name, setName] = useState<string>('');
-  const [email, setEmail] = useState<string>('admin@vinayaka.org');
-  const [password, setPassword] = useState<string>('admin123');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
@@ -30,7 +30,16 @@ export const AdminLogin: React.FC = () => {
         await adminApi.login(email.trim(), password);
       }
 
-      navigate('/admin/dashboard');
+      try {
+        await adminApi.getCurrentFund();
+        navigate('/admin/dashboard');
+      } catch (fundErr: any) {
+        if (fundErr?.response?.status === 404) {
+          navigate('/admin/fund-settings');
+          return;
+        }
+        navigate('/admin/dashboard');
+      }
     } catch (err: any) {
       const status = err.response?.status;
       const detail = err.response?.data?.detail;
@@ -147,11 +156,7 @@ export const AdminLogin: React.FC = () => {
             </div>
           </div>
 
-          {!isRegister && (
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200">
-              💡 Seed Admin: <span className="font-mono font-bold text-white">admin@vinayaka.org</span> / <span className="font-mono font-bold text-white">admin123</span>
-            </div>
-          )}
+
 
           <button
             type="submit"
@@ -168,8 +173,8 @@ export const AdminLogin: React.FC = () => {
         </form>
 
         <div className="text-center pt-2">
-          <a href="/fund/vinayaka-chavithi-2026" className="text-xs text-slate-400 hover:text-amber-300 transition">
-            ← Return to Public Transparency Page
+          <a href="/" className="text-xs text-slate-400 hover:text-amber-300 transition">
+            ← Back to Platform Home
           </a>
         </div>
 

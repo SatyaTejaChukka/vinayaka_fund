@@ -195,26 +195,36 @@ def send_donation_notification_email(
     show_donor_name: bool = True,
     description: Optional[str] = None,
     target_email: Optional[str] = None,
+    fund_name: Optional[str] = None,
+    admin_email: Optional[str] = None,
 ):
     """
-    Sends an instant email notification to administrator when a donor submits a donation form.
+    Sends an instant email notification to the fund administrator when a donor submits a donation form.
+    Recipient priority:
+      1. NOTIFICATION_EMAIL env var (global admin override)
+      2. admin_email from fund owner's User record
+      3. target_email (legacy / direct override)
+      4. Hardcoded fallback
     """
     load_dotenv()
 
     configured_notification_email = _env("NOTIFICATION_EMAIL")
-    default_notification_email = configured_notification_email or "chukkasatyateja@gmail.com"
     smtp_server = _env("SMTP_SERVER", "smtp.gmail.com")
     smtp_port = _env_int("SMTP_PORT", 587)
     smtp_username = _env("SMTP_USERNAME")
     smtp_password = os.getenv("SMTP_PASSWORD", "").replace(" ", "").strip()
-    sender_email = _env("SENDER_EMAIL") or smtp_username or "satyateja671@gmail.com"
+    sender_email = _env("SENDER_EMAIL") or smtp_username or "noreply@vinayaka.app"
 
+    # Determine the actual recipient in priority order
     recipient = (
         configured_notification_email
+        or (admin_email.strip() if admin_email and admin_email.strip() else "")
         or (target_email.strip() if target_email and target_email.strip() else "")
-        or default_notification_email
+        or "notifications@vinayaka.app"
     )
-    subject = f"New Donation Submission: INR {amount:,.2f} from {donor_name}"
+
+    fund_label = fund_name or "Vinayaka Fund"
+    subject = f"[{fund_label}] New Donation: ₹{amount:,.2f} from {donor_name}"
 
     safe_donor_name = escape(donor_name)
     safe_payment_method = escape(payment_method)
@@ -224,7 +234,7 @@ def send_donation_notification_email(
     display_status = "Publicly Visible" if show_donor_name else "Anonymous (Masked)"
 
     text_content = (
-        f"New Donation Submission\n"
+        f"New Donation Submission — {fund_label}\n"
         f"Amount: INR {amount:,.2f}\n"
         f"Donor: {donor_name}\n"
         f"Studying Year / Role: {student_year or 'N/A'}\n"
@@ -264,7 +274,7 @@ def send_donation_notification_email(
     <body>
       <div class="card">
         <div class="header">
-          <h2 class="title">Vinayaka Chavithi Fund 2026</h2>
+          <h2 class="title">{fund_label}</h2>
           <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">New Donor Submission Received</p>
         </div>
 
@@ -339,7 +349,7 @@ def send_donation_notification_email(
         return
 
     _log(
-        f"[Email Notification Notice] Simulated email to {recipient}: "
+        f"[Email Notification Notice] Simulated email to {recipient} for [{fund_label}]: "
         f"Donation INR {amount:,.2f} from {donor_name}. "
         "Set RESEND_API_KEY with a verified sender domain or BREVO_API_KEY for Render deployment."
     )

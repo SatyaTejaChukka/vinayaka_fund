@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { History, UserCheck } from 'lucide-react';
+import { History, UserCheck, ShieldCheck } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
+import { TableSkeleton } from '../../components/LoadingSkeleton';
+import { EmptyState } from '../../components/EmptyState';
+import { useToast } from '../../context/ToastContext';
 import { adminApi } from '../../services/api';
 import type { AuditLog } from '../../types';
 
 export const AuditLogs: React.FC = () => {
+  const toast = useToast();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -14,6 +18,7 @@ export const AuditLogs: React.FC = () => {
       const data = await adminApi.getAuditLogs();
       setLogs(data);
     } catch (err) {
+      toast.error('Failed to load system audit logs.');
       console.error('Failed to load audit logs:', err);
     } finally {
       setLoading(false);
@@ -27,7 +32,7 @@ export const AuditLogs: React.FC = () => {
   return (
     <AdminLayout title="Security & Action Audit Logs">
       
-      <div className="p-6 rounded-3xl festive-glass border border-amber-500/20 space-y-6">
+      <div className="p-6 rounded-3xl festive-glass border border-amber-500/20 space-y-6 shadow-xl">
         
         <div className="flex items-center justify-between border-b border-amber-500/20 pb-4">
           <div className="flex items-center gap-2">
@@ -40,13 +45,13 @@ export const AuditLogs: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-amber-300 text-sm animate-pulse">
-            Loading Audit History...
-          </div>
+          <TableSkeleton rows={6} columns={4} />
         ) : logs.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-sm">
-            No audit log entries recorded yet.
-          </div>
+          <EmptyState
+            icon={ShieldCheck}
+            title="No Audit Logs Recorded"
+            description="All admin actions (verification, creation, voiding, fund updates) will be immutably recorded here."
+          />
         ) : (
           <div className="space-y-3">
             {logs.map((log) => (
@@ -55,7 +60,7 @@ export const AuditLogs: React.FC = () => {
                 className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
               >
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2.5 py-0.5 rounded-full font-extrabold text-[10px] border ${
                       log.action === 'VERIFY'
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'

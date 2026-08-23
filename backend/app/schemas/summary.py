@@ -19,7 +19,6 @@ class PublicFundSummary(BaseModel):
     expenses_count: int
     upi_id: str
     upi_name: str
-    notification_email: Optional[str] = None
     public_slug: str
     start_date: Optional[date]
     end_date: Optional[date]

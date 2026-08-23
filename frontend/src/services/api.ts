@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { FundSummary, PublicDonation, PublicExpense, AdminDonation, AdminExpense, AuditLog, User } from '../types';
+import type { FundConfig, FundSummary, PublicDonation, PublicExpense, AdminDonation, AdminExpense, AuditLog, User } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -68,16 +68,43 @@ export const adminApi = {
     const res = await api.get('/api/auth/me');
     return res.data;
   },
-  getFundDetails: async (fundId: number): Promise<FundSummary> => {
+  getCurrentFund: async (): Promise<FundConfig> => {
+    const res = await api.get('/api/admin/funds/current');
+    return res.data;
+  },
+  getCurrentFundSummary: async (): Promise<FundSummary> => {
+    const res = await api.get('/api/admin/funds/current/summary');
+    return res.data;
+  },
+  createFund: async (data: {
+    name: string;
+    year: number;
+    target_amount: number;
+    upi_id: string;
+    upi_name: string;
+    public_slug: string;
+    description?: string;
+    is_active?: boolean;
+  }): Promise<FundConfig> => {
+    const res = await api.post('/api/admin/funds', data);
+    return res.data;
+  },
+  getFundDetails: async (fundId: number): Promise<FundConfig> => {
     const res = await api.get(`/api/admin/funds/${fundId}`);
     return res.data;
   },
-  updateFundDetails: async (fundId: number, data: Partial<FundSummary>): Promise<FundSummary> => {
+  updateFundDetails: async (fundId: number, data: Partial<FundConfig>): Promise<FundConfig> => {
     const res = await api.put(`/api/admin/funds/${fundId}`, data);
     return res.data;
   },
   clearTestData: async (fundId: number): Promise<{ message: string; donations_deleted: number; expenses_deleted: number }> => {
     const res = await api.post(`/api/admin/funds/${fundId}/clear-test-data`);
+    return res.data;
+  },
+  checkSlugAvailability: async (slug: string, fundId?: number): Promise<{ available: boolean; slug: string; reason?: string }> => {
+    const params = new URLSearchParams({ slug });
+    if (fundId !== undefined) params.append('fund_id', String(fundId));
+    const res = await api.get(`/api/admin/funds/check-slug?${params.toString()}`);
     return res.data;
   },
   getAdminDonations: async (fundId: number, status?: string): Promise<AdminDonation[]> => {
@@ -90,6 +117,7 @@ export const adminApi = {
     amount: number;
     donation_date: string;
     upi_transaction_id: string;
+    student_year?: string;
     description?: string;
     show_donor_name: boolean;
     status: string;

@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Search, PlusCircle } from 'lucide-react';
+import { Search, PlusCircle, Download, RefreshCw, Layers } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
-import { adminApi, publicApi } from '../../services/api';
+import { TableSkeleton } from '../../components/LoadingSkeleton';
+import { EmptyState } from '../../components/EmptyState';
+import { useToast } from '../../context/ToastContext';
+import { exportToCsv, type CsvColumn } from '../../utils/csvExporter';
+import { adminApi } from '../../services/api';
 import type { AdminExpense, FundSummary } from '../../types';
 
 export const AdminExpenses: React.FC = () => {
+  const toast = useToast();
+
   const [fund, setFund] = useState<FundSummary | null>(null);
+  const [setupRequired, setSetupRequired] = useState<boolean>(false);
   const [expenses, setExpenses] = useState<AdminExpense[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeFilter, setActiveFilter] = useState<string>('ALL');
@@ -28,15 +35,23 @@ export const AdminExpenses: React.FC = () => {
   const loadExpenses = async () => {
     try {
       setLoading(true);
-      const summary = await publicApi.getFundSummary('vinayaka-chavithi-2026');
+      const summary = await adminApi.getCurrentFundSummary();
       setFund(summary);
+      setSetupRequired(false);
 
       const list = await adminApi.getAdminExpenses(
         summary.id,
         activeFilter === 'ALL' ? undefined : activeFilter
       );
       setExpenses(list);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        setFund(null);
+        setExpenses([]);
+        setSetupRequired(true);
+      } else {
+        toast.error('Failed to load expenses from server.');
+      }
       console.error('Failed to load expenses:', err);
     } finally {
       setLoading(false);
@@ -50,9 +65,10 @@ export const AdminExpenses: React.FC = () => {
   const handleMarkSpent = async (id: number) => {
     try {
       await adminApi.markExpenseSpent(id);
+      toast.success(`Expense #${id} status updated to SPENT!`);
       loadExpenses();
-    } catch (err) {
-      alert('Failed to update status');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to update expense status.');
     }
   };
 
@@ -68,11 +84,19 @@ export const AdminExpenses: React.FC = () => {
         description: expForm.description,
         status: expForm.status
       });
+      toast.success(`Recorded expense: ${expForm.purpose} (₹${parseFloat(expForm.amount).toLocaleString('en-IN')})`);
       setShowAddExpense(false);
-      setExpForm({ purpose: '', amount: '', handled_by: '', expense_date: new Date().toISOString().split('T')[0], description: '', status: 'SPENT' });
+      setExpForm({
+        purpose: '',
+        amount: '',
+        handled_by: '',
+        expense_date: new Date().toISOString().split('T')[0],
+        description: '',
+        status: 'SPENT'
+      });
       loadExpenses();
-    } catch (err) {
-      alert('Failed to record expense');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to record expense.');
     }
   };
 
@@ -81,11 +105,12 @@ export const AdminExpenses: React.FC = () => {
     if (!voidingId || !voidReason.trim()) return;
     try {
       await adminApi.voidExpense(voidingId, voidReason.trim());
+      toast.info(`Expense #${voidingId} has been voided.`);
       setVoidingId(null);
       setVoidReason('');
       loadExpenses();
-    } catch (err) {
-      alert('Failed to void expense');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to void expense.');
     }
   };
 
@@ -97,6 +122,27 @@ export const AdminExpenses: React.FC = () => {
       (e.description && e.description.toLowerCase().includes(term))
     );
   });
+
+  const handleExportCsv = () => {
+    if (filteredExpenses.length === 0) {
+      toast.warning('No expenses available to export with current filters.');
+      return;
+    }
+
+    const columns: CsvColumn<AdminExpense>[] = [
+      { header: 'ID', accessor: (e) => e.id },
+      { header: 'Expense Purpose', accessor: (e) => e.purpose },
+      { header: 'Amount (INR)', accessor: (e) => e.amount },
+      { header: 'Handled / Managed By', accessor: (e) => e.handled_by },
+      { header: 'Expense Date', accessor: (e) => e.expense_date },
+      { header: 'Status', accessor: (e) => e.status },
+      { header: 'Description / Bill Note', accessor: (e) => e.description || '' },
+      { header: 'Void Reason', accessor: (e) => e.void_reason || '' }
+    ];
+
+    exportToCsv(filteredExpenses, columns, 'vinayaka_expenses_register');
+    toast.success(`Exported ${filteredExpenses.length} expense records to CSV!`);
+  };
 
   const formatINR = (val: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -112,17 +158,19 @@ export const AdminExpenses: React.FC = () => {
       {/* Header Controls */}
       <div className="p-4 rounded-2xl festive-glass border border-amber-500/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
         
+        {/* Search Bar */}
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search purpose, handler name..."
+            placeholder="Search purpose, handler name, notes..."
             className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
           />
         </div>
 
+        {/* Filter Pills & Actions */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           {['ALL', 'PENDING', 'SPENT', 'VOIDED'].map((filter) => (
             <button
@@ -138,12 +186,33 @@ export const AdminExpenses: React.FC = () => {
             </button>
           ))}
 
+          {/* CSV Export Button */}
+          <button
+            onClick={handleExportCsv}
+            disabled={loading || filteredExpenses.length === 0}
+            className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Download safe CSV of current view"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </button>
+
+          {/* Add Expense Modal Trigger */}
           <button
             onClick={() => setShowAddExpense(true)}
-            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 text-xs flex items-center gap-1.5 shrink-0 active:scale-95 ml-auto sm:ml-2"
+            className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 text-xs flex items-center gap-1.5 shrink-0 active:scale-95 ml-auto sm:ml-2 shadow-sm"
           >
             <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             <span>+ Add Expense</span>
+          </button>
+
+          {/* Refresh Button */}
+          <button
+            onClick={loadExpenses}
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition shrink-0 active:scale-95"
+            title="Refresh List"
+          >
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
 
@@ -151,17 +220,36 @@ export const AdminExpenses: React.FC = () => {
 
       {/* Expenses Table */}
       <div className="rounded-3xl festive-glass border border-amber-500/20 overflow-hidden shadow-2xl">
-        {loading ? (
-          <div className="py-12 text-center text-amber-300 text-sm animate-pulse">
-            Loading Expense Records...
+        {setupRequired ? (
+          <EmptyState
+            emoji="⚙️"
+            title="Fund Setup Required"
+            description="Please configure celebration fund details in Fund Settings first."
+            actionText="Go to Fund Settings"
+            onAction={() => (window.location.href = '/admin/fund-settings')}
+          />
+        ) : loading ? (
+          <div className="p-6">
+            <TableSkeleton rows={5} columns={6} />
           </div>
         ) : filteredExpenses.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 text-sm">
-            No expenses found matching the selected filter.
+          <div className="p-6">
+            <EmptyState
+              icon={Layers}
+              title="No Expenses Recorded"
+              description={
+                searchTerm || activeFilter !== 'ALL'
+                  ? `No expense entries match your search criteria.`
+                  : 'Track your festival procurement, idol, decoration, and sound expenses transparently.'
+              }
+              actionText="+ Record Celebration Expense"
+              onAction={() => setShowAddExpense(true)}
+              actionIcon={PlusCircle}
+            />
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] text-left text-xs">
+            <table className="w-full min-w-[650px] text-left text-xs">
               <thead className="bg-slate-900/90 border-b border-amber-500/20 text-slate-300 uppercase tracking-wider font-extrabold">
                 <tr>
                   <th className="p-4">Purpose</th>
@@ -208,7 +296,7 @@ export const AdminExpenses: React.FC = () => {
                       {e.status === 'PENDING' && (
                         <button
                           onClick={() => handleMarkSpent(e.id)}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px]"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px] transition active:scale-95"
                         >
                           Mark Spent
                         </button>
@@ -217,7 +305,7 @@ export const AdminExpenses: React.FC = () => {
                       {e.status !== 'VOIDED' && (
                         <button
                           onClick={() => setVoidingId(e.id)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-800 text-rose-400 hover:bg-rose-500/20 border border-slate-700 text-[11px] font-bold"
+                          className="px-2.5 py-1 rounded-lg bg-slate-800 text-rose-400 hover:bg-rose-500/20 border border-slate-700 text-[11px] font-bold transition active:scale-95"
                         >
                           Void
                         </button>
@@ -240,7 +328,7 @@ export const AdminExpenses: React.FC = () => {
       {/* Add Expense Modal */}
       {showAddExpense && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 text-white space-y-4">
+          <div className="w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 text-white space-y-4 shadow-2xl">
             <h3 className="text-lg font-bold text-rose-300">Record Celebration Expense</h3>
             <form onSubmit={handleAddSubmit} className="space-y-3">
               <div>
@@ -250,8 +338,8 @@ export const AdminExpenses: React.FC = () => {
                   required
                   value={expForm.purpose}
                   onChange={(e) => setExpForm({ ...expForm, purpose: e.target.value })}
-                  placeholder="Enter expense purpose"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  placeholder="e.g. Clay Idol, Flowers, Sound & Lighting"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -263,7 +351,7 @@ export const AdminExpenses: React.FC = () => {
                   value={expForm.amount}
                   onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })}
                   placeholder="8000"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-rose-400 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -274,8 +362,8 @@ export const AdminExpenses: React.FC = () => {
                   required
                   value={expForm.handled_by}
                   onChange={(e) => setExpForm({ ...expForm, handled_by: e.target.value })}
-                  placeholder="Enter person name"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  placeholder="e.g. Ramesh / Committee"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -284,7 +372,7 @@ export const AdminExpenses: React.FC = () => {
                 <select
                   value={expForm.status}
                   onChange={(e) => setExpForm({ ...expForm, status: e.target.value as 'SPENT' | 'PENDING' })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
                 >
                   <option value="SPENT">SPENT (Payment Completed)</option>
                   <option value="PENDING">PENDING (Planned / Committed)</option>
@@ -292,13 +380,13 @@ export const AdminExpenses: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">Description</label>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Description / Bill Notes</label>
                 <input
                   type="text"
                   value={expForm.description}
                   onChange={(e) => setExpForm({ ...expForm, description: e.target.value })}
-                  placeholder="Enter vendor name or bill notes"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  placeholder="Enter vendor name, bill number or notes"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -306,13 +394,13 @@ export const AdminExpenses: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddExpense(false)}
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs"
+                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs"
+                  className="w-1/2 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs shadow-md transition active:scale-95"
                 >
                   Save Expense
                 </button>
@@ -325,8 +413,11 @@ export const AdminExpenses: React.FC = () => {
       {/* Void Modal */}
       {voidingId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md festive-glass rounded-3xl border border-rose-500/30 p-6 text-white space-y-4">
+          <div className="w-full max-w-md festive-glass rounded-3xl border border-rose-500/30 p-6 text-white space-y-4 shadow-2xl">
             <h3 className="text-lg font-bold text-rose-300">Void Expense Record #{voidingId}</h3>
+            <p className="text-xs text-slate-300">
+              Financial history is preserved. Voiding will deduct this expense from calculations and record your voiding reason in system audit logs.
+            </p>
             <form onSubmit={handleVoidSubmit} className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">Reason for Voiding *</label>
@@ -336,20 +427,20 @@ export const AdminExpenses: React.FC = () => {
                   value={voidReason}
                   onChange={(e) => setVoidReason(e.target.value)}
                   placeholder="Enter reason for voiding expense"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setVoidingId(null)}
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs"
+                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs"
+                  className="w-1/2 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs shadow-md transition active:scale-95"
                 >
                   Confirm Void
                 </button>

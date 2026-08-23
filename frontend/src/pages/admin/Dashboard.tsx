@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { 
   ArrowUpRight, ArrowDownLeft, Wallet, CheckCircle2, XCircle, 
-  PlusCircle, RefreshCw, Clock
+  PlusCircle, RefreshCw, Clock, Sparkles, Check
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { StatCard } from '../../components/StatCard';
 import { ProgressBar } from '../../components/ProgressBar';
-import { adminApi, publicApi } from '../../services/api';
+import { CardSkeleton } from '../../components/LoadingSkeleton';
+import { EmptyState } from '../../components/EmptyState';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
+import { adminApi } from '../../services/api';
 import type { FundSummary, AdminDonation } from '../../types';
 
 export const AdminDashboard: React.FC = () => {
+  const toast = useToast();
+  const { confirm } = useConfirm();
+
   const [fund, setFund] = useState<FundSummary | null>(null);
+  const [setupRequired, setSetupRequired] = useState<boolean>(false);
   const [pendingDonations, setPendingDonations] = useState<AdminDonation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
@@ -25,6 +33,7 @@ export const AdminDashboard: React.FC = () => {
     amount: '',
     donation_date: new Date().toISOString().split('T')[0],
     upi_transaction_id: 'CASH',
+    student_year: '',
     description: '',
     show_donor_name: true
   });
@@ -41,12 +50,20 @@ export const AdminDashboard: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const summary = await publicApi.getFundSummary('vinayaka-chavithi-2026');
+      const summary = await adminApi.getCurrentFundSummary();
       setFund(summary);
+      setSetupRequired(false);
 
       const pendings = await adminApi.getAdminDonations(summary.id, 'PENDING');
       setPendingDonations(pendings);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        setFund(null);
+        setPendingDonations([]);
+        setSetupRequired(true);
+      } else {
+        toast.error('Failed to load dashboard metrics.');
+      }
       console.error('Error loading dashboard data:', err);
     } finally {
       setLoading(false);
@@ -61,22 +78,31 @@ export const AdminDashboard: React.FC = () => {
     try {
       setProcessingId(id);
       await adminApi.verifyDonation(id);
+      toast.success(`Donation #${id} verified and added to balance!`);
       await loadData();
-    } catch (err) {
-      alert('Failed to verify donation');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to verify donation');
     } finally {
       setProcessingId(null);
     }
   };
 
   const handleReject = async (id: number) => {
-    if (!confirm('Are you sure you want to reject this payment submission?')) return;
+    const confirmed = await confirm({
+      title: 'Reject Payment Submission?',
+      message: `Are you sure you want to reject donation submission #${id}?`,
+      confirmText: 'Reject Payment',
+      type: 'danger'
+    });
+    if (!confirmed) return;
+
     try {
       setProcessingId(id);
       await adminApi.rejectDonation(id);
+      toast.warning(`Donation #${id} rejected.`);
       await loadData();
-    } catch (err) {
-      alert('Failed to reject donation');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to reject donation');
     } finally {
       setProcessingId(null);
     }
@@ -91,15 +117,25 @@ export const AdminDashboard: React.FC = () => {
         amount: parseFloat(donForm.amount),
         donation_date: donForm.donation_date,
         upi_transaction_id: donForm.upi_transaction_id,
+        student_year: donForm.student_year || undefined,
         description: donForm.description,
         show_donor_name: donForm.show_donor_name,
         status: 'VERIFIED'
       });
+      toast.success(`Recorded ₹${parseFloat(donForm.amount).toLocaleString('en-IN')} donation from ${donForm.donor_name}!`);
       setShowAddDonation(false);
-      setDonForm({ donor_name: '', amount: '', donation_date: new Date().toISOString().split('T')[0], upi_transaction_id: 'CASH', description: '', show_donor_name: true });
+      setDonForm({
+        donor_name: '',
+        amount: '',
+        donation_date: new Date().toISOString().split('T')[0],
+        upi_transaction_id: 'CASH',
+        student_year: '',
+        description: '',
+        show_donor_name: true
+      });
       loadData();
-    } catch (err) {
-      alert('Failed to add manual donation');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to add manual donation');
     }
   };
 
@@ -115,83 +151,108 @@ export const AdminDashboard: React.FC = () => {
         description: expForm.description,
         status: expForm.status
       });
+      toast.success(`Recorded expense: ${expForm.purpose} (₹${parseFloat(expForm.amount).toLocaleString('en-IN')})`);
       setShowAddExpense(false);
-      setExpForm({ purpose: '', amount: '', handled_by: '', expense_date: new Date().toISOString().split('T')[0], description: '', status: 'SPENT' });
+      setExpForm({
+        purpose: '',
+        amount: '',
+        handled_by: '',
+        expense_date: new Date().toISOString().split('T')[0],
+        description: '',
+        status: 'SPENT'
+      });
       loadData();
-    } catch (err) {
-      alert('Failed to create expense');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to create expense');
     }
   };
 
   const formatINR = (val: number) => {
+    const safeVal = Number.isFinite(val) ? val : 0;
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(val);
+    }).format(safeVal);
   };
+
+  if (setupRequired) {
+    return (
+      <AdminLayout title="Admin Overview">
+        <EmptyState
+          emoji="🪔"
+          title="Celebration Fund Setup Required"
+          description="Your administrator account is ready. Create or configure your celebration fund to start collecting and tracking donations."
+          actionText="Create Celebration Fund"
+          onAction={() => (window.location.href = '/admin/fund-settings')}
+        />
+      </AdminLayout>
+    );
+  }
 
   if (loading || !fund) {
     return (
       <AdminLayout title="Admin Overview">
-        <div className="py-12 text-center text-amber-300 animate-pulse">
-          Loading Admin Dashboard Metrics...
+        <div className="space-y-6">
+          <CardSkeleton count={4} />
+          <div className="p-6 rounded-3xl festive-glass border border-amber-500/20 animate-pulse h-48" />
         </div>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="Committee Control Dashboard">
+    <AdminLayout title="Admin Overview">
       
-      {/* Top Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl festive-glass border border-amber-500/20">
-        <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <span>{fund.name}</span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Active</span>
-          </h2>
-          <p className="text-xs text-slate-400">UPI ID: <span className="font-mono text-amber-300">{fund.upi_id}</span></p>
+      {/* Top Banner with Quick Actions */}
+      <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-gold-gradient tracking-tight">
+              {fund.name}
+            </h2>
+            <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Live & Active
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-300">
+            Target: <span className="font-bold text-amber-300">{formatINR(fund.target_amount)}</span> • 
+            Public Slug: <a href={`/fund/${fund.public_slug}`} target="_blank" rel="noreferrer" className="text-amber-400 underline hover:text-amber-300 font-mono text-xs ml-1">/fund/{fund.public_slug}</a>
+          </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap w-full sm:w-auto">
+        {/* Quick Actions */}
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowAddDonation(true)}
-            className="flex-1 sm:flex-initial px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold gold-button flex items-center justify-center gap-1.5 active:scale-95 transition"
+            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-extrabold gold-button text-xs sm:text-sm shadow-lg active:scale-[0.98] transition flex items-center gap-1.5"
           >
-            <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-            <span>+ Donation</span>
+            <PlusCircle className="w-4 h-4 text-slate-950 shrink-0" />
+            <span>+ Cash Donation</span>
           </button>
 
           <button
             onClick={() => setShowAddExpense(true)}
-            className="flex-1 sm:flex-initial px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition flex items-center justify-center gap-1.5 active:scale-95"
+            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 text-xs sm:text-sm active:scale-[0.98] transition flex items-center gap-1.5 shadow-sm"
           >
-            <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-            <span>+ Expense</span>
+            <PlusCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>+ Record Expense</span>
           </button>
 
           <button
             onClick={loadData}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center justify-center shrink-0 active:scale-95"
-            title="Refresh Data"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-[0.98]"
+            title="Refresh Metrics"
           >
-            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <RefreshCw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <ProgressBar
-        collected={fund.total_collected}
-        target={fund.target_amount}
-        percentage={fund.collection_percentage}
-      />
-
-      {/* Stat Cards Matrix */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* 4 Primary Financial Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="COLLECTED"
+          title="TOTAL COLLECTED"
           amount={fund.total_collected}
           subtitle={`${fund.verified_donations_count} verified`}
           icon={<ArrowUpRight className="w-5 h-5 text-amber-400" />}
@@ -223,6 +284,29 @@ export const AdminDashboard: React.FC = () => {
         />
       </div>
 
+      {/* Target Goal Progress Bar */}
+      <ProgressBar
+        title="Target Goal Progress"
+        badgeText="Live Community Goal"
+        badgeVariant="emerald"
+        percentage={fund.collection_percentage}
+        target={fund.target_amount}
+        collected={fund.total_collected}
+        labelRight="Raised of Goal Target"
+        barColor="amber"
+        icon={<Sparkles className="w-5 h-5 text-amber-400 shrink-0" />}
+        footerLeft={
+          <span className="text-slate-300">
+            Target Celebration Goal: <strong className="text-amber-300 font-bold">{formatINR(fund.target_amount)}</strong>
+          </span>
+        }
+        footerRight={
+          <span className="text-slate-300">
+            Verified Raised: <strong className="text-emerald-400 font-black">{formatINR(fund.total_collected)}</strong>
+          </span>
+        }
+      />
+
       {/* Pending Donation Verification Queue */}
       <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/20 pb-3">
@@ -242,9 +326,12 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {pendingDonations.length === 0 ? (
-          <div className="p-6 sm:p-8 text-center bg-slate-900/50 rounded-2xl text-slate-400 text-xs sm:text-sm border border-slate-800">
-            ✓ All donor submissions have been verified! No pending items in queue.
-          </div>
+          <EmptyState
+            icon={Check}
+            emoji="✨"
+            title="All Submissions Verified"
+            description="No pending donor submissions in the verification queue. All donations have been processed!"
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {pendingDonations.map((d) => (
@@ -258,6 +345,11 @@ export const AdminDashboard: React.FC = () => {
                       <h4 className="font-extrabold text-white text-sm sm:text-base truncate">
                         {d.donor_name}
                       </h4>
+                      {d.student_year && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                          🎓 {d.student_year}
+                        </span>
+                      )}
                       {!d.show_donor_name && (
                         <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0 font-medium">
                           Public Anonymous
@@ -310,7 +402,7 @@ export const AdminDashboard: React.FC = () => {
       {/* Add Manual Donation Modal */}
       {showAddDonation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 text-white space-y-4">
+          <div className="w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 text-white space-y-4 shadow-2xl">
             <h3 className="text-lg font-bold text-gold-gradient">Record Manual / Cash Donation</h3>
             <form onSubmit={handleAddDonationSubmit} className="space-y-3">
               <div>
@@ -321,8 +413,26 @@ export const AdminDashboard: React.FC = () => {
                   value={donForm.donor_name}
                   onChange={(e) => setDonForm({ ...donForm, donor_name: e.target.value })}
                   placeholder="Enter donor name"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Academic Year / Role</label>
+                <select
+                  value={donForm.student_year}
+                  onChange={(e) => setDonForm({ ...donForm, student_year: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
+                >
+                  <option value="">Select Studying Year (Optional)</option>
+                  <option value="1st Year (I)">1st Year (I)</option>
+                  <option value="2nd Year (II)">2nd Year (II)</option>
+                  <option value="3rd Year (III)">3rd Year (III)</option>
+                  <option value="4th Year (IV)">4th Year (IV)</option>
+                  <option value="Faculty">Faculty</option>
+                  <option value="Alumni">Alumni</option>
+                  <option value="General Public">General Public</option>
+                </select>
               </div>
 
               <div>
@@ -332,57 +442,46 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={donForm.amount}
                   onChange={(e) => setDonForm({ ...donForm, amount: e.target.value })}
-                  placeholder="5000"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold"
+                  placeholder="1000"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">UPI Ref / Cash Receipt *</label>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Receipt / Payment Mode</label>
                 <input
                   type="text"
-                  required
                   value={donForm.upi_transaction_id}
                   onChange={(e) => setDonForm({ ...donForm, upi_transaction_id: e.target.value })}
-                  placeholder="Enter transaction or receipt ID"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono"
+                  placeholder="CASH or UPI-Ref"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono focus:outline-none focus:border-amber-400"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">Description / Purpose</label>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Description / Note</label>
                 <input
                   type="text"
                   value={donForm.description}
                   onChange={(e) => setDonForm({ ...donForm, description: e.target.value })}
-                  placeholder="Enter note or description"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  placeholder="Optional notes"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="donShowPublic"
-                  checked={donForm.show_donor_name}
-                  onChange={(e) => setDonForm({ ...donForm, show_donor_name: e.target.checked })}
-                />
-                <label htmlFor="donShowPublic" className="text-xs text-slate-300">Show name publicly</label>
               </div>
 
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddDonation(false)}
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs"
+                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 py-2.5 rounded-xl font-bold gold-button text-xs"
+                  className="w-1/2 py-2.5 rounded-xl font-bold gold-button text-xs shadow-md transition active:scale-95"
                 >
-                  Save Verified Donation
+                  Save & Verify
                 </button>
               </div>
             </form>
@@ -393,7 +492,7 @@ export const AdminDashboard: React.FC = () => {
       {/* Add Expense Modal */}
       {showAddExpense && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 text-white space-y-4">
+          <div className="w-full max-w-md festive-glass rounded-3xl border border-rose-500/30 p-6 text-white space-y-4 shadow-2xl">
             <h3 className="text-lg font-bold text-rose-300">Record Celebration Expense</h3>
             <form onSubmit={handleAddExpenseSubmit} className="space-y-3">
               <div>
@@ -403,8 +502,8 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={expForm.purpose}
                   onChange={(e) => setExpForm({ ...expForm, purpose: e.target.value })}
-                  placeholder="Enter expense purpose"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  placeholder="e.g. Clay Idol, Sound & Lighting"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -416,7 +515,7 @@ export const AdminDashboard: React.FC = () => {
                   value={expForm.amount}
                   onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })}
                   placeholder="8000"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-rose-400 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -427,8 +526,8 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={expForm.handled_by}
                   onChange={(e) => setExpForm({ ...expForm, handled_by: e.target.value })}
-                  placeholder="Enter person name"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  placeholder="e.g. Ramesh"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -437,7 +536,7 @@ export const AdminDashboard: React.FC = () => {
                 <select
                   value={expForm.status}
                   onChange={(e) => setExpForm({ ...expForm, status: e.target.value as 'SPENT' | 'PENDING' })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
                 >
                   <option value="SPENT">SPENT (Payment Completed)</option>
                   <option value="PENDING">PENDING (Planned / Committed)</option>
@@ -445,13 +544,13 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">Description</label>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Description / Notes</label>
                 <input
                   type="text"
                   value={expForm.description}
                   onChange={(e) => setExpForm({ ...expForm, description: e.target.value })}
-                  placeholder="Additional bill / vendor details"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm"
+                  placeholder="Bill details or vendor note"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -459,15 +558,15 @@ export const AdminDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddExpense(false)}
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs"
+                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs"
+                  className="w-1/2 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs shadow-md transition active:scale-95"
                 >
-                  Record Expense
+                  Save Expense
                 </button>
               </div>
             </form>

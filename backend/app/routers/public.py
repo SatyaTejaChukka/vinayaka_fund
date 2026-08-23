@@ -10,6 +10,7 @@ from app.core.database import get_db
 from app.models.fund import Fund
 from app.models.donation import Donation
 from app.models.expense import Expense
+from app.models.user import User
 from app.schemas.summary import PublicFundSummary
 from app.schemas.donation import DonationSubmit, PublicDonationResponse
 from app.schemas.expense import PublicExpenseResponse
@@ -18,19 +19,19 @@ from app.services.email_service import send_donation_notification_email
 
 router = APIRouter(prefix="/api/public/funds", tags=["Public Transparency"])
 
+
 def get_fund_by_slug(slug: str, db: Session) -> Fund:
-    fund = db.query(Fund).filter(Fund.public_slug == slug, Fund.is_active == True).first()
+    fund = db.query(Fund).filter(Fund.public_slug == slug, Fund.is_active == True).first()  # noqa: E712
     if not fund:
-        # Fallback: try by active fund if single fund exists
-        fund = db.query(Fund).filter(Fund.is_active == True).first()
-        if not fund:
-            raise HTTPException(status_code=404, detail="Fund not found")
+        raise HTTPException(status_code=404, detail="Fund not found")
     return fund
+
 
 @router.get("/{slug}", response_model=PublicFundSummary)
 def get_public_fund_summary(slug: str, db: Session = Depends(get_db)):
     fund = get_fund_by_slug(slug, db)
     return calculate_fund_summary(db, fund)
+
 
 @router.get("/{slug}/donations", response_model=List[PublicDonationResponse])
 def get_public_verified_donations(slug: str, db: Session = Depends(get_db)):
@@ -53,6 +54,7 @@ def get_public_verified_donations(slug: str, db: Session = Depends(get_db)):
         ))
     return result
 
+
 @router.get("/{slug}/expenses", response_model=List[PublicExpenseResponse])
 def get_public_expenses(slug: str, db: Session = Depends(get_db)):
     fund = get_fund_by_slug(slug, db)
@@ -62,6 +64,7 @@ def get_public_expenses(slug: str, db: Session = Depends(get_db)):
     ).order_by(Expense.expense_date.desc(), Expense.created_at.desc()).all()
 
     return expenses
+
 
 @router.post("/{slug}/donations/submit", response_model=PublicDonationResponse)
 def submit_donation(
@@ -90,7 +93,14 @@ def submit_donation(
     db.commit()
     db.refresh(new_donation)
 
-    # Queue instant notification email to administrator
+    # Look up the fund-owning admin's email so notifications go to the right person
+    admin_email: Optional[str] = None
+    if fund.admin_id:
+        admin_user = db.query(User).filter(User.id == fund.admin_id).first()
+        if admin_user:
+            admin_email = admin_user.email
+
+    # Queue instant notification email to the fund administrator
     background_tasks.add_task(
         send_donation_notification_email,
         donor_name=new_donation.donor_name,
@@ -101,7 +111,8 @@ def submit_donation(
         student_year=new_donation.student_year,
         show_donor_name=new_donation.show_donor_name,
         description=new_donation.description,
-        target_email=fund.notification_email
+        fund_name=fund.name,
+        admin_email=admin_email,
     )
 
     return PublicDonationResponse(
@@ -114,10 +125,11 @@ def submit_donation(
         student_year=new_donation.student_year
     )
 
+
 @router.get("/{slug}/qr")
 def generate_upi_qr(slug: str, amount: Optional[float] = None, db: Session = Depends(get_db)):
     fund = get_fund_by_slug(slug, db)
-    
+
     # Standard UPI Payment URI specification
     upi_uri = f"upi://pay?pa={quote(fund.upi_id)}&pn={quote(fund.upi_name)}&cu=INR"
     if amount and amount > 0:

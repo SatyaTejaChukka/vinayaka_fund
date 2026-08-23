@@ -18,11 +18,12 @@ export const StatCard: React.FC<StatCardProps> = ({
   badge
 }) => {
   const formatINR = (val: number) => {
+    const safeVal = Number.isFinite(val) ? val : 0;
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(val);
+    }).format(safeVal);
   };
 
   const variantStyles = {
