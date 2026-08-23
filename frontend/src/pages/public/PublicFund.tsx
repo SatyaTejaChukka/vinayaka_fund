@@ -47,7 +47,7 @@ export const PublicFund: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
   const [selectedYear, setSelectedYear] = useState<string>('ALL_YEARS');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_high' | 'amount_low'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_high'>('newest');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 9;
 
@@ -124,7 +124,6 @@ export const PublicFund: React.FC = () => {
 
   const sortedDonations = [...searchedDonations].sort((a, b) => {
     if (sortBy === 'amount_high') return b.amount - a.amount;
-    if (sortBy === 'amount_low') return a.amount - b.amount;
     if (sortBy === 'oldest') {
       const dateA = new Date(a.donation_date).getTime();
       const dateB = new Date(b.donation_date).getTime();
@@ -549,7 +548,6 @@ export const PublicFund: React.FC = () => {
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
                     <option value="amount_high">Highest Amount</option>
-                    <option value="amount_low">Lowest Amount</option>
                   </select>
                 </div>
               </div>
