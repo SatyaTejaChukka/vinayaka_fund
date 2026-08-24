@@ -688,7 +688,7 @@ export const PublicFund: React.FC = () => {
                   icon={Wallet}
                   emoji="📋"
                   title="No Expenses Documented"
-                  description="All celebration expenses (idol, flowers, sound, lighting, prasadam) will be publicly accounted for here."
+                  description="All celebration expenses will be publicly accounted for here."
                 />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
