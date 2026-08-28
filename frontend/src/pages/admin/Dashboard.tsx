@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   ArrowUpRight, ArrowDownLeft, Wallet, CheckCircle2, XCircle, 
-  PlusCircle, RefreshCw, Clock, Sparkles, Check
+  PlusCircle, RefreshCw, Clock, Sparkles, Check, Eye, EyeOff
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { StatCard } from '../../components/StatCard';
@@ -105,6 +105,24 @@ export const AdminDashboard: React.FC = () => {
       toast.error(err?.response?.data?.detail || 'Failed to reject donation');
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const handleToggleVisibility = async (id: number, currentVisibility: boolean) => {
+    const nextVisibility = !currentVisibility;
+    try {
+      setPendingDonations((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, show_donor_name: nextVisibility } : d))
+      );
+      await adminApi.updateDonationVisibility(id, nextVisibility);
+      toast.success(
+        nextVisibility
+          ? `Donation #${id} is now Public (name shown on portal)!`
+          : `Donation #${id} is now Anonymous (name hidden on portal)!`
+      );
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to update visibility.');
+      loadData();
     }
   };
 
@@ -350,11 +368,32 @@ export const AdminDashboard: React.FC = () => {
                           🎓 {d.student_year}
                         </span>
                       )}
-                      {!d.show_donor_name && (
-                        <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0 font-medium">
-                          Public Anonymous
-                        </span>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleVisibility(d.id, d.show_donor_name)}
+                        className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold transition border active:scale-95 ${
+                          d.show_donor_name
+                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25 shadow-sm'
+                            : 'bg-slate-800 text-amber-300 border-amber-500/30 hover:bg-amber-500/10'
+                        }`}
+                        title={
+                          d.show_donor_name
+                            ? 'Currently Public on portal. Click to make Anonymous.'
+                            : 'Currently Anonymous on portal. Click to make Public.'
+                        }
+                      >
+                        {d.show_donor_name ? (
+                          <>
+                            <Eye className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span>Public</span>
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="w-3 h-3 text-amber-400 shrink-0" />
+                            <span>Anonymous</span>
+                          </>
+                        )}
+                      </button>
                     </div>
 
                     <div className="inline-flex items-center gap-1 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80 text-[11px] sm:text-xs font-mono text-amber-300">

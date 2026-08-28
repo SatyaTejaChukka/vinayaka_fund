@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.models.fund import Fund
 from app.models.donation import Donation
 from app.models.user import User
-from app.schemas.donation import DonationAdminCreate, DonationVoidRequest, AdminDonationResponse
+from app.schemas.donation import DonationAdminCreate, DonationVoidRequest, DonationVisibilityUpdate, AdminDonationResponse
 from app.dependencies.auth import get_current_admin
 from app.services.audit_service import log_action
 
@@ -130,3 +130,30 @@ def void_donation(
 
     log_action(db, action="VOID", entity_type="DONATION", entity_id=donation.id, user_id=current_admin.id, old_data={"status": old_status}, new_data={"status": "VOIDED", "reason": void_req.reason})
     return donation
+
+@router.patch("/api/admin/donations/{donation_id}/visibility", response_model=AdminDonationResponse)
+def toggle_donation_visibility(
+    donation_id: int,
+    visibility_in: DonationVisibilityUpdate,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin)
+):
+    donation = get_owned_donation(db, donation_id, current_admin)
+
+    old_visibility = donation.show_donor_name
+    donation.show_donor_name = visibility_in.show_donor_name
+
+    db.commit()
+    db.refresh(donation)
+
+    log_action(
+        db,
+        action="UPDATE_VISIBILITY",
+        entity_type="DONATION",
+        entity_id=donation.id,
+        user_id=current_admin.id,
+        old_data={"show_donor_name": old_visibility},
+        new_data={"show_donor_name": donation.show_donor_name}
+    )
+    return donation
+

@@ -137,6 +137,10 @@ export const adminApi = {
     const res = await api.post(`/api/admin/donations/${donationId}/void`, { reason });
     return res.data;
   },
+  updateDonationVisibility: async (donationId: number, showDonorName: boolean): Promise<AdminDonation> => {
+    const res = await api.patch(`/api/admin/donations/${donationId}/visibility`, { show_donor_name: showDonorName });
+    return res.data;
+  },
   getAdminExpenses: async (fundId: number, status?: string): Promise<AdminExpense[]> => {
     const url = `/api/admin/funds/${fundId}/expenses` + (status ? `?status=${status}` : '');
     const res = await api.get(url);

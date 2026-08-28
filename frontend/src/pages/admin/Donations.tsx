@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, RefreshCw, CheckCircle2, XCircle, Download, Filter, GraduationCap } from 'lucide-react';
+import { Search, RefreshCw, CheckCircle2, XCircle, Download, Filter, GraduationCap, Eye, EyeOff } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { TableSkeleton } from '../../components/LoadingSkeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -103,6 +103,24 @@ export const AdminDonations: React.FC = () => {
     }
   };
 
+  const handleToggleVisibility = async (id: number, currentVisibility: boolean) => {
+    const nextVisibility = !currentVisibility;
+    try {
+      setDonations((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, show_donor_name: nextVisibility } : d))
+      );
+      await adminApi.updateDonationVisibility(id, nextVisibility);
+      toast.success(
+        nextVisibility
+          ? `Donation #${id} is now Public (name shown on portal)!`
+          : `Donation #${id} is now Anonymous (name hidden on portal)!`
+      );
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to update visibility.');
+      loadDonations();
+    }
+  };
+
   const filteredDonations = donations.filter((d) => {
     // Search matching
     const term = searchTerm.toLowerCase();
@@ -114,7 +132,7 @@ export const AdminDonations: React.FC = () => {
     // Academic year matching
     let matchesYear = true;
     if (yearFilter === 'Other / General') {
-      matchesYear = !d.student_year || d.student_year === 'Other' || d.student_year === 'General';
+      matchesYear = !d.student_year || d.student_year === 'Other' || d.student_year === 'General' || d.student_year === 'Other / General';
     } else if (yearFilter !== 'ALL_YEARS') {
       matchesYear = d.student_year === yearFilter;
     }
@@ -270,6 +288,7 @@ export const AdminDonations: React.FC = () => {
                   <th className="p-4">Amount</th>
                   <th className="p-4">UPI / Ref ID</th>
                   <th className="p-4">Date</th>
+                  <th className="p-4">Public View</th>
                   <th className="p-4">Status</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
@@ -283,6 +302,11 @@ export const AdminDonations: React.FC = () => {
                         {d.student_year && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
                             🎓 {d.student_year}
+                          </span>
+                        )}
+                        {!d.show_donor_name && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-amber-300/90 border border-amber-500/30 font-semibold">
+                            Anonymous on Portal
                           </span>
                         )}
                         {d.description && <span className="text-[11px] text-slate-400">{d.description}</span>}
@@ -299,6 +323,34 @@ export const AdminDonations: React.FC = () => {
 
                     <td className="p-4 text-slate-400">
                       {d.donation_date}
+                    </td>
+
+                    <td className="p-4">
+                      <button
+                        onClick={() => handleToggleVisibility(d.id, d.show_donor_name)}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition border active:scale-95 ${
+                          d.show_donor_name
+                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25 shadow-sm'
+                            : 'bg-slate-900/90 text-amber-300 border-amber-500/30 hover:bg-amber-500/10'
+                        }`}
+                        title={
+                          d.show_donor_name
+                            ? 'Currently Public on portal. Click to make Anonymous.'
+                            : 'Currently Anonymous on portal. Click to make Public.'
+                        }
+                      >
+                        {d.show_donor_name ? (
+                          <>
+                            <Eye className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Public</span>
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>Anonymous</span>
+                          </>
+                        )}
+                      </button>
                     </td>
 
                     <td className="p-4">

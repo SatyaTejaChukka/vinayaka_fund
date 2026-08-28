@@ -17,6 +17,9 @@ class DonationAdminCreate(DonationSubmit):
 class DonationVoidRequest(BaseModel):
     reason: str
 
+class DonationVisibilityUpdate(BaseModel):
+    show_donor_name: bool
+
 class PublicDonationResponse(BaseModel):
     id: int
     donor_name: str  # Will be "Anonymous" if show_donor_name is False
