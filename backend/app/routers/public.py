@@ -10,10 +10,12 @@ from app.core.database import get_db
 from app.models.fund import Fund
 from app.models.donation import Donation
 from app.models.expense import Expense
+from app.models.event_schedule import EventSchedule
 from app.models.user import User
 from app.schemas.summary import PublicFundSummary
 from app.schemas.donation import DonationSubmit, PublicDonationResponse
 from app.schemas.expense import PublicExpenseResponse
+from app.schemas.event_schedule import PublicScheduleResponse, EventScheduleResponse
 from app.services.fund_service import calculate_fund_summary
 from app.services.email_service import send_donation_notification_email
 
@@ -64,6 +66,30 @@ def get_public_expenses(slug: str, db: Session = Depends(get_db)):
     ).order_by(Expense.expense_date.desc(), Expense.created_at.desc()).all()
 
     return expenses
+
+
+@router.get("/{slug}/schedule", response_model=PublicScheduleResponse)
+def get_public_schedule(slug: str, db: Session = Depends(get_db)):
+    fund = get_fund_by_slug(slug, db)
+
+    events_list = []
+    if fund.is_schedule_published:
+        events = (
+            db.query(EventSchedule)
+            .filter(EventSchedule.fund_id == fund.id)
+            .order_by(EventSchedule.order_index.asc(), EventSchedule.event_date.asc(), EventSchedule.created_at.asc())
+            .all()
+        )
+        events_list = events
+
+    return PublicScheduleResponse(
+        is_schedule_published=fund.is_schedule_published,
+        is_banner_active=fund.is_banner_active,
+        banner_headline=fund.banner_headline,
+        banner_message=fund.banner_message,
+        events=[EventScheduleResponse.from_orm(e) for e in events_list] if events_list else []
+    )
+
 
 
 @router.post("/{slug}/donations/submit", response_model=PublicDonationResponse)

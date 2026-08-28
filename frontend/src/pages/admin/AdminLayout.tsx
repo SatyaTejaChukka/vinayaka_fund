@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, HeartHandshake, Receipt, Settings, 
-  History, LogOut, ExternalLink, ShieldCheck, User as UserIcon, Menu, X
+  History, LogOut, ExternalLink, ShieldCheck, User as UserIcon, Menu, X, Calendar
 } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import type { User } from '../../types';
@@ -64,6 +64,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
 
   const navLinks = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { name: 'Event Schedule & Banner', path: '/admin/schedule', icon: <Calendar className="w-4 h-4" /> },
     { name: 'Donations & Verify', path: '/admin/donations', icon: <HeartHandshake className="w-4 h-4" /> },
     { name: 'Expense Tracker', path: '/admin/expenses', icon: <Receipt className="w-4 h-4" /> },
     { name: 'Fund Settings', path: '/admin/fund-settings', icon: <Settings className="w-4 h-4" /> },

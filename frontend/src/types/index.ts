@@ -10,6 +10,34 @@ export interface FundConfig {
   start_date?: string;
   end_date?: string;
   is_active: boolean;
+  is_schedule_published?: boolean;
+  is_banner_active?: boolean;
+  banner_headline?: string;
+  banner_message?: string;
+}
+
+export interface EventSchedule {
+  id: number;
+  fund_id: number;
+  title: string;
+  category: 'POOJA' | 'RANGOLI' | 'COMPETITION' | 'CULTURAL' | 'PRASADAM' | 'VISARJAN' | 'OTHER' | string;
+  event_date: string;
+  start_time: string;
+  end_time?: string;
+  venue: string;
+  description?: string;
+  is_highlighted: boolean;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PublicSchedulePayload {
+  is_schedule_published: boolean;
+  is_banner_active: boolean;
+  banner_headline?: string;
+  banner_message?: string;
+  events: EventSchedule[];
 }
 
 export interface FundSummary extends FundConfig {

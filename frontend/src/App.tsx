@@ -10,6 +10,7 @@ import { AdminDonations } from './pages/admin/Donations';
 import { AdminExpenses } from './pages/admin/Expenses';
 import { FundSettings } from './pages/admin/FundSettings';
 import { AuditLogs } from './pages/admin/AuditLogs';
+import { AdminEventSchedule } from './pages/admin/EventSchedule';
 
 const DEMO_SLUG = 'vinayaka-chavithi-2026';
 
@@ -73,6 +74,7 @@ export const App: React.FC = () => {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/donations" element={<AdminDonations />} />
             <Route path="/admin/expenses" element={<AdminExpenses />} />
+            <Route path="/admin/schedule" element={<AdminEventSchedule />} />
             <Route path="/admin/fund-settings" element={<FundSettings />} />
             <Route path="/admin/audit-logs" element={<AuditLogs />} />
 

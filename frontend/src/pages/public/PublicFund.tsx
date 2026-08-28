@@ -5,7 +5,7 @@ import {
   Wallet, CheckCircle2, Clock, Layers, Calendar,
   Download, GraduationCap, Filter, Banknote,
   Search, ArrowUpDown, ChevronLeft, ChevronRight, X,
-  Percent, Users
+  Percent, Users, Sparkles, Palette, Flame, Megaphone, MapPin, Award, Utensils, Waves
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
@@ -20,7 +20,17 @@ import { EmptyState } from '../../components/EmptyState';
 import { useToast } from '../../context/ToastContext';
 import { exportToCsv, type CsvColumn } from '../../utils/csvExporter';
 import { publicApi } from '../../services/api';
-import type { FundSummary, PublicDonation, PublicExpense } from '../../types';
+import type { FundSummary, PublicDonation, PublicExpense, PublicSchedulePayload } from '../../types';
+
+const SCHEDULE_CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; badge: string }> = {
+  POOJA: { label: 'Pooja & Aarti', icon: <Flame className="w-3.5 h-3.5" />, badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
+  RANGOLI: { label: 'Rangoli Event', icon: <Palette className="w-3.5 h-3.5" />, badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
+  COMPETITION: { label: 'Competition', icon: <Award className="w-3.5 h-3.5" />, badge: 'bg-pink-500/20 text-pink-300 border-pink-500/30' },
+  PRASADAM: { label: 'Maha Prasadam', icon: <Utensils className="w-3.5 h-3.5" />, badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
+  VISARJAN: { label: 'Visarjan / Immersion', icon: <Waves className="w-3.5 h-3.5" />, badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
+  CULTURAL: { label: 'Cultural & Bhajans', icon: <Sparkles className="w-3.5 h-3.5" />, badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' },
+  OTHER: { label: 'General Event', icon: <Calendar className="w-3.5 h-3.5" />, badge: 'bg-slate-800 text-slate-300 border-slate-700' },
+};
 
 // Public academic batch filter presets
 const PUBLIC_ACADEMIC_YEARS = [
@@ -39,13 +49,14 @@ export const PublicFund: React.FC = () => {
   const [fund, setFund] = useState<FundSummary | null>(null);
   const [donations, setDonations] = useState<PublicDonation[]>([]);
   const [expenses, setExpenses] = useState<PublicExpense[]>([]);
+  const [schedulePayload, setSchedulePayload] = useState<PublicSchedulePayload | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
   const [isDonateOpen, setIsDonateOpen] = useState<boolean>(false);
   const [isCashOpen, setIsCashOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
+  const [activeTab, setActiveTab] = useState<'donations' | 'expenses' | 'schedule'>('donations');
   const [selectedYear, setSelectedYear] = useState<string>('ALL_YEARS');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_high'>('newest');
@@ -78,14 +89,16 @@ export const PublicFund: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const [summaryRes, donRes, expRes] = await Promise.all([
+      const [summaryRes, donRes, expRes, schedRes] = await Promise.all([
         publicApi.getFundSummary(slug),
         publicApi.getVerifiedDonations(slug),
-        publicApi.getExpenses(slug)
+        publicApi.getExpenses(slug),
+        publicApi.getPublicSchedule(slug).catch(() => null)
       ]);
       setFund(summaryRes);
       setDonations(donRes);
       setExpenses(expRes);
+      if (schedRes) setSchedulePayload(schedRes);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load transparency details.');
       toast.error('Failed to load fund transparency data.');
@@ -243,6 +256,50 @@ export const PublicFund: React.FC = () => {
 
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 space-y-6 sm:space-y-8 flex-grow min-w-0">
         
+        {/* Top Festive Announcement & Rangoli / Pooja Timing Banner */}
+        {schedulePayload?.is_banner_active && (
+          <section className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-purple-500/20 border border-amber-500/40 shadow-2xl relative overflow-hidden backdrop-blur-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/30 border border-amber-400/50 flex items-center justify-center text-amber-300 diya-pulse shrink-0">
+                  <Megaphone className="w-5 h-5 text-amber-300" />
+                </div>
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-500/30 text-amber-200 border border-amber-400/40">
+                      Festival Announcement
+                    </span>
+                    {schedulePayload.banner_headline && (
+                      <h4 className="font-extrabold text-white text-sm sm:text-base">
+                        {schedulePayload.banner_headline}
+                      </h4>
+                    )}
+                  </div>
+                  {schedulePayload.banner_message && (
+                    <p className="text-xs sm:text-sm text-amber-100/90 font-medium leading-relaxed">
+                      {schedulePayload.banner_message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {schedulePayload.is_schedule_published && schedulePayload.events.length > 0 && (
+                <button
+                  onClick={() => {
+                    setActiveTab('schedule');
+                    const el = document.getElementById('donations-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="px-4 py-2.5 rounded-xl font-extrabold gold-button text-amber-950 text-xs flex items-center justify-center gap-1.5 active:scale-95 transition shadow-lg shrink-0 self-start md:self-auto"
+                >
+                  <Calendar className="w-4 h-4 text-amber-950" />
+                  <span>View Full Schedule</span>
+                </button>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Hero Header */}
         <section className="text-center space-y-3 relative max-w-full overflow-hidden px-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full festive-glass-gold border border-amber-500/30 text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider max-w-full">
@@ -371,7 +428,7 @@ export const PublicFund: React.FC = () => {
           {/* Tab Selector & Export Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-amber-500/20 pb-4 gap-3">
             {/* Segmented Tab Controls */}
-            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 sm:flex sm:items-center w-full sm:w-auto p-1 rounded-2xl bg-slate-950/60 border border-amber-500/20">
+            <div className={`grid ${schedulePayload?.is_schedule_published && schedulePayload.events.length > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 sm:gap-2 sm:flex sm:items-center w-full sm:w-auto p-1 rounded-2xl bg-slate-950/60 border border-amber-500/20`}>
               <button
                 onClick={() => setActiveTab('donations')}
                 className={`py-2 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 ${
@@ -405,6 +462,25 @@ export const PublicFund: React.FC = () => {
                   {expenses.length}
                 </span>
               </button>
+
+              {schedulePayload?.is_schedule_published && schedulePayload.events.length > 0 && (
+                <button
+                  onClick={() => setActiveTab('schedule')}
+                  className={`py-2 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 ${
+                    activeTab === 'schedule'
+                      ? 'gold-button text-amber-950 shadow-md'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span className="truncate">Schedule</span>
+                  <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-extrabold ${
+                    activeTab === 'schedule' ? 'bg-amber-950/20 text-amber-950' : 'bg-slate-800 text-slate-300'
+                  }`}>
+                    {schedulePayload.events.length}
+                  </span>
+                </button>
+              )}
             </div>
 
             {/* CSV Export Button for active tab */}
@@ -737,6 +813,84 @@ export const PublicFund: React.FC = () => {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Schedule & Events Tab View */}
+          {activeTab === 'schedule' && schedulePayload?.is_schedule_published && (
+            <div className="space-y-4">
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-slate-900/60 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-extrabold text-white text-base sm:text-lg flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-amber-400 shrink-0" />
+                    Festival Timeline & Competition Schedule
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Official celebration timings, Rangoli competition venue details, and ritual schedules.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-amber-300 font-bold bg-amber-500/20 px-3 py-1.5 rounded-xl border border-amber-500/30 shrink-0 self-start sm:self-auto">
+                  <Flame className="w-4 h-4 text-amber-400" />
+                  <span>All Devotees & Batches Welcome</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {schedulePayload.events.map((event) => {
+                  const meta = SCHEDULE_CATEGORY_META[event.category] || SCHEDULE_CATEGORY_META.OTHER;
+                  return (
+                    <div
+                      key={event.id}
+                      className={`p-4 sm:p-5 rounded-2xl bg-slate-900/90 border transition space-y-3 shadow-md relative overflow-hidden ${
+                        event.is_highlighted
+                          ? 'border-amber-500/50 hover:border-amber-400'
+                          : 'border-slate-700/60 hover:border-amber-500/30'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1 ${meta.badge}`}>
+                              {meta.icon}
+                              <span>{meta.label}</span>
+                            </span>
+                            {event.is_highlighted && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                                <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+                                <span>Featured Highlight</span>
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-extrabold text-white text-sm sm:text-base leading-snug">
+                            {event.title}
+                          </h4>
+                        </div>
+                      </div>
+
+                      {event.description && (
+                        <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-slate-800/80">
+                          {event.description}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-300 pt-2 border-t border-slate-800/80">
+                        <span className="flex items-center gap-1 font-bold text-amber-300">
+                          <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                          {event.event_date}
+                        </span>
+                        <span className="flex items-center gap-1 font-mono text-emerald-300 font-bold">
+                          <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                          {event.start_time}{event.end_time ? ` - ${event.end_time}` : ''}
+                        </span>
+                        <span className="flex items-center gap-1 text-slate-400">
+                          <MapPin className="w-3.5 h-3.5 text-rose-400" />
+                          {event.venue}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

@@ -13,6 +13,10 @@ class FundBase(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     is_active: bool = True
+    is_schedule_published: bool = False
+    is_banner_active: bool = False
+    banner_headline: Optional[str] = "✨ Festival Schedule & Competitions Announced!"
+    banner_message: Optional[str] = "🪔 Maha Ganapati Pooja at 9:00 AM | 🎨 Inter-Batch Rangoli Competition at 2:00 PM"
 
 class FundCreate(FundBase):
     pass
@@ -28,6 +32,10 @@ class FundUpdate(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     is_active: Optional[bool] = None
+    is_schedule_published: Optional[bool] = None
+    is_banner_active: Optional[bool] = None
+    banner_headline: Optional[str] = None
+    banner_message: Optional[str] = None
 
 class FundResponse(FundBase):
     id: int

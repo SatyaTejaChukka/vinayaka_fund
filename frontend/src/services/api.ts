@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { FundConfig, FundSummary, PublicDonation, PublicExpense, AdminDonation, AdminExpense, AuditLog, User } from '../types';
+import type { FundConfig, FundSummary, PublicDonation, PublicExpense, AdminDonation, AdminExpense, AuditLog, User, EventSchedule, PublicSchedulePayload } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -30,6 +30,10 @@ export const publicApi = {
   },
   getExpenses: async (slug: string): Promise<PublicExpense[]> => {
     const res = await api.get(`/api/public/funds/${slug}/expenses`);
+    return res.data;
+  },
+  getPublicSchedule: async (slug: string): Promise<PublicSchedulePayload> => {
+    const res = await api.get(`/api/public/funds/${slug}/schedule`);
     return res.data;
   },
   submitDonation: async (slug: string, data: {
@@ -167,6 +171,48 @@ export const adminApi = {
   },
   getAuditLogs: async (): Promise<AuditLog[]> => {
     const res = await api.get('/api/admin/audit-logs');
+    return res.data;
+  },
+  getSchedules: async (fundId: number): Promise<EventSchedule[]> => {
+    const res = await api.get(`/api/admin/funds/${fundId}/schedules`);
+    return res.data;
+  },
+  createSchedule: async (fundId: number, data: {
+    title: string;
+    category: string;
+    event_date: string;
+    start_time: string;
+    end_time?: string;
+    venue: string;
+    description?: string;
+    is_highlighted: boolean;
+    order_index: number;
+  }): Promise<EventSchedule> => {
+    const res = await api.post(`/api/admin/funds/${fundId}/schedules`, data);
+    return res.data;
+  },
+  updateSchedule: async (scheduleId: number, data: Partial<EventSchedule>): Promise<EventSchedule> => {
+    const res = await api.put(`/api/admin/schedules/${scheduleId}`, data);
+    return res.data;
+  },
+  deleteSchedule: async (scheduleId: number): Promise<{ message: string; id: number }> => {
+    const res = await api.delete(`/api/admin/schedules/${scheduleId}`);
+    return res.data;
+  },
+  toggleSchedulePublish: async (fundId: number, is_schedule_published: boolean): Promise<{ is_schedule_published: boolean }> => {
+    const res = await api.patch(`/api/admin/funds/${fundId}/schedules/publish`, { is_schedule_published });
+    return res.data;
+  },
+  toggleBannerPublish: async (fundId: number, data: {
+    is_banner_active: boolean;
+    banner_headline?: string;
+    banner_message?: string;
+  }): Promise<{ is_banner_active: boolean; banner_headline?: string; banner_message?: string }> => {
+    const res = await api.patch(`/api/admin/funds/${fundId}/banner/publish`, data);
+    return res.data;
+  },
+  seedDefaultSchedules: async (fundId: number): Promise<EventSchedule[]> => {
+    const res = await api.post(`/api/admin/funds/${fundId}/schedules/seed-defaults`);
     return res.data;
   },
 };

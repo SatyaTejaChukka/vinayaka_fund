@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal, get_db
 from app.models import User, Fund
 from app.core.security import get_password_hash
-from app.routers import auth, public, admin_funds, admin_donations, admin_expenses, admin_audit
+from app.routers import auth, public, admin_funds, admin_donations, admin_expenses, admin_audit, admin_schedules
 
 def run_db_migrations():
     """Run Alembic migrations programmatically to head revision."""
@@ -108,6 +108,7 @@ app.include_router(admin_funds.router)
 app.include_router(admin_donations.router)
 app.include_router(admin_expenses.router)
 app.include_router(admin_audit.router)
+app.include_router(admin_schedules.router)
 
 @app.get("/")
 def root():
