@@ -326,8 +326,8 @@ export const PublicFund: React.FC = () => {
                 }}
                 className="inline-flex items-center justify-center gap-2 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-purple-500/25 to-amber-500/20 border border-amber-500/40 text-amber-200 text-xs sm:text-sm font-black hover:scale-105 active:scale-95 transition shadow-xl cursor-pointer max-w-full"
               >
-                <Sparkles className="w-4 h-4 text-amber-400 diya-pulse shrink-0" />
-                <span className="break-words">🪔 Event Schedule & Rangoli Competition ({schedulePayload.events.length} Events) ↓</span>
+                
+                <span className="break-words">🪔 View Event Schedule & Announcements ({schedulePayload.events.length} {schedulePayload.events.length === 1 ? 'Event' : 'Events'}) ↓</span>
               </button>
             </div>
           )}
