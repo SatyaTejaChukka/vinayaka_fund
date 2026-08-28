@@ -222,57 +222,73 @@ export const AdminDashboard: React.FC = () => {
   return (
     <AdminLayout title="Admin Overview">
       
-      {/* Top Banner with Quick Actions */}
-      <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-gold-gradient tracking-tight">
-              {fund.name}
-            </h2>
-            <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              Live & Active
-            </span>
+      {/* Top Campaign Banner with Quick Actions & Status */}
+      <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-gold-gradient tracking-tight break-words">
+                {fund.name}
+              </h2>
+              <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                Live & Active
+              </span>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-300">
+              <span>Target: <strong className="text-amber-300 font-bold">{formatINR(fund.target_amount)}</strong></span>
+              <span className="text-slate-600 hidden sm:inline">•</span>
+              <span>Raised: <strong className="text-emerald-400 font-bold">{formatINR(fund.total_collected)} ({fund.collection_percentage.toFixed(1)}%)</strong></span>
+              <span className="text-slate-600 hidden sm:inline">•</span>
+              <span className="flex items-center gap-1">
+                <span>Public Portal:</span>
+                <a 
+                  href={`/fund/${fund.public_slug}`} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="text-amber-400 underline hover:text-amber-300 font-mono text-xs"
+                >
+                  /fund/{fund.public_slug}
+                </a>
+              </span>
+            </div>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
-            Target: <span className="font-bold text-amber-300">{formatINR(fund.target_amount)}</span> • 
-            Public Slug: <a href={`/fund/${fund.public_slug}`} target="_blank" rel="noreferrer" className="text-amber-400 underline hover:text-amber-300 font-mono text-xs ml-1">/fund/{fund.public_slug}</a>
-          </p>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setShowAddDonation(true)}
-            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-extrabold gold-button text-xs sm:text-sm shadow-lg active:scale-[0.98] transition flex items-center gap-1.5"
-          >
-            <PlusCircle className="w-4 h-4 text-slate-950 shrink-0" />
-            <span>+ Cash Donation</span>
-          </button>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <button
+              onClick={() => setShowAddDonation(true)}
+              className="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-extrabold gold-button text-xs sm:text-sm shadow-md active:scale-95 transition flex items-center justify-center gap-1.5 shrink-0"
+            >
+              <PlusCircle className="w-4 h-4 text-slate-950 shrink-0" />
+              <span>+ Cash Donation</span>
+            </button>
 
-          <button
-            onClick={() => setShowAddExpense(true)}
-            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 text-xs sm:text-sm active:scale-[0.98] transition flex items-center gap-1.5 shadow-sm"
-          >
-            <PlusCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>+ Record Expense</span>
-          </button>
+            <button
+              onClick={() => setShowAddExpense(true)}
+              className="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 text-xs sm:text-sm active:scale-95 transition flex items-center justify-center gap-1.5 shrink-0"
+            >
+              <PlusCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>+ Record Expense</span>
+            </button>
 
-          <button
-            onClick={loadData}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-[0.98]"
-            title="Refresh Metrics"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+            <button
+              onClick={loadData}
+              className="p-2 sm:p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95 shrink-0 border border-slate-700"
+              title="Refresh Metrics"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 4 Primary Financial Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         <StatCard
           title="TOTAL COLLECTED"
           amount={fund.total_collected}
-          subtitle={`${fund.verified_donations_count} verified`}
+          subtitle={`${fund.verified_donations_count} verified donations`}
           icon={<ArrowUpRight className="w-5 h-5 text-amber-400" />}
           variant="amber"
         />
@@ -280,7 +296,7 @@ export const AdminDashboard: React.FC = () => {
         <StatCard
           title="TOTAL SPENT"
           amount={fund.total_spent}
-          subtitle={`${fund.expenses_count} expenses`}
+          subtitle={`${fund.expenses_count} recorded expenses`}
           icon={<ArrowDownLeft className="w-5 h-5 text-rose-400" />}
           variant="rose"
         />
@@ -288,7 +304,7 @@ export const AdminDashboard: React.FC = () => {
         <StatCard
           title="PENDING COMMITMENTS"
           amount={fund.pending_expenses}
-          subtitle="Planned expenses"
+          subtitle="Planned & committed"
           icon={<Clock className="w-5 h-5 text-purple-400" />}
           variant="purple"
         />
@@ -314,12 +330,12 @@ export const AdminDashboard: React.FC = () => {
         barColor="amber"
         icon={<Sparkles className="w-5 h-5 text-amber-400 shrink-0" />}
         footerLeft={
-          <span className="text-slate-300">
+          <span className="text-slate-300 text-xs sm:text-sm">
             Target Celebration Goal: <strong className="text-amber-300 font-bold">{formatINR(fund.target_amount)}</strong>
           </span>
         }
         footerRight={
-          <span className="text-slate-300">
+          <span className="text-slate-300 text-xs sm:text-sm">
             Verified Raised: <strong className="text-emerald-400 font-black">{formatINR(fund.total_collected)}</strong>
           </span>
         }
@@ -339,7 +355,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <span className="text-[11px] sm:text-xs text-slate-400">
-            Verify donor UPI details against bank statements
+            Verify donor UPI details against your bank statement
           </span>
         </div>
 
@@ -348,85 +364,86 @@ export const AdminDashboard: React.FC = () => {
             icon={Check}
             emoji="✨"
             title="All Submissions Verified"
-            description="No pending donor submissions in the verification queue. All donations have been processed!"
+            description="No pending donor submissions in the verification queue. All donations have been processed and confirmed!"
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {pendingDonations.map((d) => (
               <div
                 key={d.id}
-                className="p-3.5 sm:p-4.5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-3 relative shadow-md"
+                className="p-3.5 sm:p-4.5 rounded-2xl bg-slate-900/90 border border-amber-500/30 space-y-3 relative shadow-md flex flex-col justify-between"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-1.5 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-extrabold text-white text-sm sm:text-base truncate">
-                        {d.donor_name}
-                      </h4>
-                      {d.student_year && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
-                          🎓 {d.student_year}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleVisibility(d.id, d.show_donor_name)}
-                        className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold transition border active:scale-95 ${
-                          d.show_donor_name
-                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25 shadow-sm'
-                            : 'bg-slate-800 text-amber-300 border-amber-500/30 hover:bg-amber-500/10'
-                        }`}
-                        title={
-                          d.show_donor_name
-                            ? 'Currently Public on portal. Click to make Anonymous.'
-                            : 'Currently Anonymous on portal. Click to make Public.'
-                        }
-                      >
-                        {d.show_donor_name ? (
-                          <>
-                            <Eye className="w-3 h-3 text-emerald-400 shrink-0" />
-                            <span>Public</span>
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="w-3 h-3 text-amber-400 shrink-0" />
-                            <span>Anonymous</span>
-                          </>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-extrabold text-white text-sm sm:text-base break-words">
+                          {d.donor_name}
+                        </h4>
+                        {d.student_year && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 shrink-0">
+                            🎓 {d.student_year}
+                          </span>
                         )}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleVisibility(d.id, d.show_donor_name)}
+                          className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold transition border active:scale-95 shrink-0 ${
+                            d.show_donor_name
+                              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25 shadow-sm'
+                              : 'bg-slate-800 text-amber-300 border-amber-500/30 hover:bg-amber-500/10'
+                          }`}
+                          title={
+                            d.show_donor_name
+                              ? 'Currently Public on portal. Click to make Anonymous.'
+                              : 'Currently Anonymous on portal. Click to make Public.'
+                          }
+                        >
+                          {d.show_donor_name ? (
+                            <>
+                              <Eye className="w-3 h-3 text-emerald-400 shrink-0" />
+                              <span>Public</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="w-3 h-3 text-amber-400 shrink-0" />
+                              <span>Anonymous</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="inline-flex items-center gap-1 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80 text-[11px] sm:text-xs font-mono text-amber-300 break-all">
+                        <span className="text-slate-400 font-sans">UPI Ref:</span>
+                        <span className="font-bold tracking-wide">{d.upi_transaction_id || 'N/A'}</span>
+                      </div>
                     </div>
 
-                    <div className="inline-flex items-center gap-1 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800/80 text-[11px] sm:text-xs font-mono text-amber-300">
-                      <span className="text-slate-400 font-sans">UPI Ref:</span>
-                      <span className="font-bold tracking-wide">{d.upi_transaction_id || 'N/A'}</span>
-                    </div>
+                    <span className="text-lg sm:text-xl font-black text-gold-gradient shrink-0">
+                      {formatINR(d.amount)}
+                    </span>
                   </div>
 
-                  <span className="text-lg sm:text-xl font-black text-gold-gradient shrink-0">
-                    {formatINR(d.amount)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 pt-2 border-t border-slate-800/80 gap-2 flex-wrap">
-                  <span>Submitted: {d.donation_date}</span>
-                  {d.description && <span className="italic truncate max-w-[160px] sm:max-w-[200px]">{d.description}</span>}
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 pt-2 border-t border-slate-800/80 gap-2 flex-wrap">
+                    <span>Submitted: {d.donation_date}</span>
+                    {d.description && <span className="italic truncate max-w-[160px] sm:max-w-[220px]">{d.description}</span>}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     disabled={processingId === d.id}
                     onClick={() => handleVerify(d.id)}
-                    className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-extrabold bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-slate-950 hover:brightness-110 active:scale-[0.98] transition shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-extrabold bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-slate-950 hover:brightness-110 active:scale-95 transition shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
                     <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
-                    <span className="hidden sm:inline">Confirm & Verify</span>
-                    <span className="inline sm:hidden">Verify</span>
+                    <span>Confirm & Verify</span>
                   </button>
 
                   <button
                     disabled={processingId === d.id}
                     onClick={() => handleReject(d.id)}
-                    className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 active:scale-[0.98] transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    className="flex-1 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 active:scale-95 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
                     <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
                     <span>Reject</span>
@@ -440,10 +457,19 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Add Manual Donation Modal */}
       {showAddDonation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 text-white space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-gold-gradient">Record Manual / Cash Donation</h3>
-            <form onSubmit={handleAddDonationSubmit} className="space-y-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-md festive-glass rounded-2xl sm:rounded-3xl border border-amber-500/30 p-4 sm:p-6 text-white space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
+              <h3 className="text-base sm:text-lg font-bold text-gold-gradient">Record Manual / Cash Donation</h3>
+              <button
+                onClick={() => setShowAddDonation(false)}
+                className="text-slate-400 hover:text-white text-xs font-bold p-1"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <form onSubmit={handleAddDonationSubmit} className="space-y-3.5">
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">Donor Name *</label>
                 <input
@@ -452,7 +478,7 @@ export const AdminDashboard: React.FC = () => {
                   value={donForm.donor_name}
                   onChange={(e) => setDonForm({ ...donForm, donor_name: e.target.value })}
                   placeholder="Enter donor name"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -461,7 +487,7 @@ export const AdminDashboard: React.FC = () => {
                 <select
                   value={donForm.student_year}
                   onChange={(e) => setDonForm({ ...donForm, student_year: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400"
                 >
                   <option value="">Select Studying Year (Optional)</option>
                   <option value="1st Year (I)">1st Year (I)</option>
@@ -479,10 +505,11 @@ export const AdminDashboard: React.FC = () => {
                 <input
                   type="number"
                   required
+                  min="1"
                   value={donForm.amount}
                   onChange={(e) => setDonForm({ ...donForm, amount: e.target.value })}
                   placeholder="1000"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -493,7 +520,7 @@ export const AdminDashboard: React.FC = () => {
                   value={donForm.upi_transaction_id}
                   onChange={(e) => setDonForm({ ...donForm, upi_transaction_id: e.target.value })}
                   placeholder="CASH or UPI-Ref"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm font-mono focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -503,22 +530,22 @@ export const AdminDashboard: React.FC = () => {
                   type="text"
                   value={donForm.description}
                   onChange={(e) => setDonForm({ ...donForm, description: e.target.value })}
-                  placeholder="Optional notes"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  placeholder="Optional notes or batch details"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowAddDonation(false)}
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 py-2.5 rounded-xl font-bold gold-button text-xs shadow-md transition active:scale-95"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold gold-button text-amber-950 text-xs shadow-md transition active:scale-95 text-center"
                 >
                   Save & Verify
                 </button>
@@ -530,10 +557,19 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Add Expense Modal */}
       {showAddExpense && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md festive-glass rounded-3xl border border-rose-500/30 p-6 text-white space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-rose-300">Record Celebration Expense</h3>
-            <form onSubmit={handleAddExpenseSubmit} className="space-y-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-md festive-glass rounded-2xl sm:rounded-3xl border border-rose-500/30 p-4 sm:p-6 text-white space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-rose-500/20 pb-3">
+              <h3 className="text-base sm:text-lg font-bold text-rose-300">Record Celebration Expense</h3>
+              <button
+                onClick={() => setShowAddExpense(false)}
+                className="text-slate-400 hover:text-white text-xs font-bold p-1"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <form onSubmit={handleAddExpenseSubmit} className="space-y-3.5">
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">Expense Purpose *</label>
                 <input
@@ -542,7 +578,7 @@ export const AdminDashboard: React.FC = () => {
                   value={expForm.purpose}
                   onChange={(e) => setExpForm({ ...expForm, purpose: e.target.value })}
                   placeholder="e.g. Clay Idol, Sound & Lighting"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -551,10 +587,11 @@ export const AdminDashboard: React.FC = () => {
                 <input
                   type="number"
                   required
+                  min="1"
                   value={expForm.amount}
                   onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })}
                   placeholder="8000"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-rose-400 focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm font-bold text-rose-400 focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -565,8 +602,8 @@ export const AdminDashboard: React.FC = () => {
                   required
                   value={expForm.handled_by}
                   onChange={(e) => setExpForm({ ...expForm, handled_by: e.target.value })}
-                  placeholder="e.g. Ramesh"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  placeholder="e.g. Ramesh / Committee Member"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -575,7 +612,7 @@ export const AdminDashboard: React.FC = () => {
                 <select
                   value={expForm.status}
                   onChange={(e) => setExpForm({ ...expForm, status: e.target.value as 'SPENT' | 'PENDING' })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400"
                 >
                   <option value="SPENT">SPENT (Payment Completed)</option>
                   <option value="PENDING">PENDING (Planned / Committed)</option>
@@ -588,22 +625,22 @@ export const AdminDashboard: React.FC = () => {
                   type="text"
                   value={expForm.description}
                   onChange={(e) => setExpForm({ ...expForm, description: e.target.value })}
-                  placeholder="Bill details or vendor note"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  placeholder="Bill details or vendor contact"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowAddExpense(false)}
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs shadow-md transition active:scale-95"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs shadow-md transition active:scale-95 text-center"
                 >
                   Save Expense
                 </button>
