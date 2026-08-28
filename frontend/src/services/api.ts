@@ -211,8 +211,8 @@ export const adminApi = {
     const res = await api.patch(`/api/admin/funds/${fundId}/banner/publish`, data);
     return res.data;
   },
-  seedDefaultSchedules: async (fundId: number): Promise<EventSchedule[]> => {
-    const res = await api.post(`/api/admin/funds/${fundId}/schedules/seed-defaults`);
+  seedDefaultSchedules: async (fundId: number, reset: boolean = false): Promise<EventSchedule[]> => {
+    const res = await api.post(`/api/admin/funds/${fundId}/schedules/seed-defaults?reset=${reset}`);
     return res.data;
   },
 };

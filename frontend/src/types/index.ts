@@ -23,9 +23,9 @@ export interface EventSchedule {
   category: 'POOJA' | 'RANGOLI' | 'COMPETITION' | 'CULTURAL' | 'PRASADAM' | 'VISARJAN' | 'OTHER' | string;
   event_date: string;
   start_time: string;
-  end_time?: string;
+  end_time?: string | null;
   venue: string;
-  description?: string;
+  description?: string | null;
   is_highlighted: boolean;
   order_index: number;
   created_at: string;

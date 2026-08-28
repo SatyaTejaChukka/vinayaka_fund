@@ -151,19 +151,22 @@ export const AdminEventSchedule: React.FC = () => {
 
   const handleSeedDefaults = async () => {
     if (!fund) return;
+    const hasExisting = schedules.length > 0;
     const confirmed = await confirm({
-      title: 'Load Festive Schedule Templates?',
-      message: 'This will auto-populate pre-configured celebration events (Pooja Timings, Inter-Batch Rangoli Competition, Maha Aarti, Prasadam & Visarjan). You can edit them anytime.',
-      confirmText: 'Load Templates',
-      type: 'info'
+      title: hasExisting ? 'Reset & Reload Festive Templates?' : 'Load Festive Schedule Templates?',
+      message: hasExisting
+        ? `You currently have ${schedules.length} event(s) in your schedule. Resetting will restore the 5 standard celebration templates (Ganesh Sthapana & Pooja, Inter-Batch Rangoli Competition, Evening Aarti, Maha Prasadam, Visarjan Procession). Do you want to proceed?`
+        : 'This will auto-populate pre-configured celebration events (Pooja Timings, Inter-Batch Rangoli Competition, Maha Aarti, Prasadam & Visarjan). You can edit them anytime.',
+      confirmText: hasExisting ? 'Reset & Reload Templates' : 'Load Templates',
+      type: hasExisting ? 'warning' : 'info'
     });
     if (!confirmed) return;
 
     try {
       setLoading(true);
-      const seeded = await adminApi.seedDefaultSchedules(fund.id);
+      const seeded = await adminApi.seedDefaultSchedules(fund.id, hasExisting);
       setSchedules(seeded);
-      toast.success('Loaded classic festival schedule template!');
+      toast.success(hasExisting ? 'Reset and reloaded festival schedule templates!' : 'Loaded classic festival schedule template!');
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || 'Failed to load templates.');
     } finally {
@@ -176,10 +179,10 @@ export const AdminEventSchedule: React.FC = () => {
     setEventForm({
       title: '',
       category: 'POOJA',
-      event_date: 'Day 1 - Morning',
-      start_time: '09:00 AM',
-      end_time: '11:00 AM',
-      venue: 'Main Campus Quadrangle',
+      event_date: '',
+      start_time: '',
+      end_time: '',
+      venue: '',
       description: '',
       is_highlighted: false,
       order_index: schedules.length + 1
@@ -207,15 +210,18 @@ export const AdminEventSchedule: React.FC = () => {
     e.preventDefault();
     if (!fund) return;
     try {
+      const cleanEndTime = eventForm.end_time.trim() || null;
+      const cleanDescription = eventForm.description.trim() || null;
+
       if (editingId) {
         await adminApi.updateSchedule(editingId, {
           title: eventForm.title.trim(),
           category: eventForm.category,
           event_date: eventForm.event_date.trim(),
           start_time: eventForm.start_time.trim(),
-          end_time: eventForm.end_time.trim() || undefined,
+          end_time: cleanEndTime,
           venue: eventForm.venue.trim(),
-          description: eventForm.description.trim() || undefined,
+          description: cleanDescription,
           is_highlighted: eventForm.is_highlighted,
           order_index: Number(eventForm.order_index) || 0
         });
@@ -226,9 +232,9 @@ export const AdminEventSchedule: React.FC = () => {
           category: eventForm.category,
           event_date: eventForm.event_date.trim(),
           start_time: eventForm.start_time.trim(),
-          end_time: eventForm.end_time.trim() || undefined,
+          end_time: cleanEndTime || undefined,
           venue: eventForm.venue.trim(),
-          description: eventForm.description.trim() || undefined,
+          description: cleanDescription || undefined,
           is_highlighted: eventForm.is_highlighted,
           order_index: Number(eventForm.order_index) || 0
         });
@@ -413,15 +419,14 @@ export const AdminEventSchedule: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                {schedules.length === 0 && (
-                  <button
-                    onClick={handleSeedDefaults}
-                    className="px-3.5 py-2 rounded-xl font-bold text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 active:scale-95 transition flex items-center gap-1.5"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Load Festive Template</span>
-                  </button>
-                )}
+                <button
+                  onClick={handleSeedDefaults}
+                  className="px-3.5 py-2 rounded-xl font-bold text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 active:scale-95 transition flex items-center gap-1.5"
+                  title={schedules.length === 0 ? "Load Festive Templates" : "Reset & Reload Templates"}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <span>{schedules.length === 0 ? 'Load Festive Template' : 'Reload / Reset Templates'}</span>
+                </button>
 
                 <button
                   onClick={handleOpenAdd}

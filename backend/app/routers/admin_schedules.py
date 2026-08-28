@@ -64,13 +64,13 @@ def create_schedule_item(
 
     new_item = EventSchedule(
         fund_id=fund_id,
-        title=item_in.title,
+        title=item_in.title.strip(),
         category=item_in.category.upper(),
-        event_date=item_in.event_date,
-        start_time=item_in.start_time,
-        end_time=item_in.end_time,
-        venue=item_in.venue,
-        description=item_in.description,
+        event_date=item_in.event_date.strip(),
+        start_time=item_in.start_time.strip(),
+        end_time=item_in.end_time.strip() if item_in.end_time and item_in.end_time.strip() else None,
+        venue=item_in.venue.strip(),
+        description=item_in.description.strip() if item_in.description and item_in.description.strip() else None,
         is_highlighted=item_in.is_highlighted,
         order_index=item_in.order_index,
     )
@@ -108,6 +108,18 @@ def update_schedule_item(
     update_data = item_in.model_dump(exclude_unset=True)
     if "category" in update_data and update_data["category"]:
         update_data["category"] = update_data["category"].upper()
+    if "title" in update_data and update_data["title"]:
+        update_data["title"] = update_data["title"].strip()
+    if "event_date" in update_data and update_data["event_date"]:
+        update_data["event_date"] = update_data["event_date"].strip()
+    if "start_time" in update_data and update_data["start_time"]:
+        update_data["start_time"] = update_data["start_time"].strip()
+    if "venue" in update_data and update_data["venue"]:
+        update_data["venue"] = update_data["venue"].strip()
+    if "end_time" in update_data:
+        update_data["end_time"] = update_data["end_time"].strip() if update_data["end_time"] and update_data["end_time"].strip() else None
+    if "description" in update_data:
+        update_data["description"] = update_data["description"].strip() if update_data["description"] and update_data["description"].strip() else None
 
     for key, value in update_data.items():
         setattr(schedule, key, value)
@@ -221,20 +233,25 @@ def toggle_banner_publish(
 @router.post("/api/admin/funds/{fund_id}/schedules/seed-defaults", response_model=List[EventScheduleResponse])
 def seed_default_schedules(
     fund_id: int,
+    reset: bool = False,
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
     fund = get_owned_fund(db, fund_id, current_admin)
 
-    # If events already exist, don't overwrite
-    existing_count = db.query(EventSchedule).filter(EventSchedule.fund_id == fund_id).count()
-    if existing_count > 0:
-        return (
-            db.query(EventSchedule)
-            .filter(EventSchedule.fund_id == fund_id)
-            .order_by(EventSchedule.order_index.asc())
-            .all()
-        )
+    if reset:
+        db.query(EventSchedule).filter(EventSchedule.fund_id == fund_id).delete()
+        db.commit()
+    else:
+        # If events already exist and not resetting, return existing
+        existing_count = db.query(EventSchedule).filter(EventSchedule.fund_id == fund_id).count()
+        if existing_count > 0:
+            return (
+                db.query(EventSchedule)
+                .filter(EventSchedule.fund_id == fund_id)
+                .order_by(EventSchedule.order_index.asc())
+                .all()
+            )
 
     default_events = [
         EventSchedule(
