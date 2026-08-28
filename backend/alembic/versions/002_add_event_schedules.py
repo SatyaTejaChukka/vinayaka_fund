@@ -18,44 +18,55 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    existing_tables = inspector.get_table_names()
     is_sqlite = bind.dialect.name == 'sqlite'
+
+    funds_columns = []
+    if 'funds' in existing_tables:
+        funds_columns = [col['name'] for col in inspector.get_columns('funds')]
 
     # Add schedule and banner columns to funds table
     with op.batch_alter_table('funds', schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column('is_schedule_published', sa.Boolean(), nullable=False, server_default=sa.text('0' if is_sqlite else 'false'))
-        )
-        batch_op.add_column(
-            sa.Column('is_banner_active', sa.Boolean(), nullable=False, server_default=sa.text('0' if is_sqlite else 'false'))
-        )
-        batch_op.add_column(
-            sa.Column('banner_headline', sa.String(), nullable=True, server_default='✨ Festival Schedule & Competitions Announced!')
-        )
-        batch_op.add_column(
-            sa.Column('banner_message', sa.String(), nullable=True, server_default='🪔 Maha Ganapati Pooja at 9:00 AM | 🎨 Inter-Batch Rangoli Competition at 2:00 PM')
-        )
+        if 'is_schedule_published' not in funds_columns:
+            batch_op.add_column(
+                sa.Column('is_schedule_published', sa.Boolean(), nullable=False, server_default=sa.text('0' if is_sqlite else 'false'))
+            )
+        if 'is_banner_active' not in funds_columns:
+            batch_op.add_column(
+                sa.Column('is_banner_active', sa.Boolean(), nullable=False, server_default=sa.text('0' if is_sqlite else 'false'))
+            )
+        if 'banner_headline' not in funds_columns:
+            batch_op.add_column(
+                sa.Column('banner_headline', sa.String(), nullable=True, server_default='✨ Festival Schedule & Competitions Announced!')
+            )
+        if 'banner_message' not in funds_columns:
+            batch_op.add_column(
+                sa.Column('banner_message', sa.String(), nullable=True, server_default='🪔 Maha Ganapati Pooja at 9:00 AM | 🎨 Inter-Batch Rangoli Competition at 2:00 PM')
+            )
 
     # Create event_schedules table
-    op.create_table(
-        'event_schedules',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('fund_id', sa.Integer(), nullable=False),
-        sa.Column('title', sa.String(), nullable=False),
-        sa.Column('category', sa.String(), nullable=False, server_default='POOJA'),
-        sa.Column('event_date', sa.String(), nullable=False),
-        sa.Column('start_time', sa.String(), nullable=False),
-        sa.Column('end_time', sa.String(), nullable=True),
-        sa.Column('venue', sa.String(), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('is_highlighted', sa.Boolean(), nullable=False, server_default=sa.text('0' if is_sqlite else 'false')),
-        sa.Column('order_index', sa.Integer(), nullable=False, server_default='0'),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['fund_id'], ['funds.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_event_schedules_id'), 'event_schedules', ['id'], unique=False)
-    op.create_index(op.f('ix_event_schedules_fund_id'), 'event_schedules', ['fund_id'], unique=False)
+    if 'event_schedules' not in existing_tables:
+        op.create_table(
+            'event_schedules',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('fund_id', sa.Integer(), nullable=False),
+            sa.Column('title', sa.String(), nullable=False),
+            sa.Column('category', sa.String(), nullable=False, server_default='POOJA'),
+            sa.Column('event_date', sa.String(), nullable=False),
+            sa.Column('start_time', sa.String(), nullable=False),
+            sa.Column('end_time', sa.String(), nullable=True),
+            sa.Column('venue', sa.String(), nullable=False),
+            sa.Column('description', sa.Text(), nullable=True),
+            sa.Column('is_highlighted', sa.Boolean(), nullable=False, server_default=sa.text('0' if is_sqlite else 'false')),
+            sa.Column('order_index', sa.Integer(), nullable=False, server_default='0'),
+            sa.Column('created_at', sa.DateTime(), nullable=False),
+            sa.Column('updated_at', sa.DateTime(), nullable=False),
+            sa.ForeignKeyConstraint(['fund_id'], ['funds.id'], ondelete='CASCADE'),
+            sa.PrimaryKeyConstraint('id')
+        )
+        op.create_index(op.f('ix_event_schedules_id'), 'event_schedules', ['id'], unique=False)
+        op.create_index(op.f('ix_event_schedules_fund_id'), 'event_schedules', ['fund_id'], unique=False)
 
 
 def downgrade() -> None:
