@@ -287,9 +287,9 @@ export const AdminEventSchedule: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             
             {/* Card 1: 1-Click Schedule Public Publish Switch */}
-            <div className="p-5 sm:p-6 rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl relative overflow-hidden">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-amber-400 shrink-0" />
                     <h3 className="font-extrabold text-white text-base sm:text-lg">Public Schedule Visibility</h3>
@@ -302,9 +302,9 @@ export const AdminEventSchedule: React.FC = () => {
                 <button
                   disabled={togglingSchedule}
                   onClick={handleToggleSchedulePublish}
-                  className={`px-3.5 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shrink-0 border ${
+                  className={`w-full sm:w-auto px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shrink-0 border shadow-md ${
                     isSchedulePublished
-                      ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 border-emerald-300/40 shadow-lg'
+                      ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 border-emerald-300/40'
                       : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-amber-500/40'
                   }`}
                 >
@@ -322,7 +322,7 @@ export const AdminEventSchedule: React.FC = () => {
                 </button>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between text-xs text-slate-300">
+              <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
                 <span className="flex items-center gap-1.5">
                   <span className={`w-2.5 h-2.5 rounded-full ${isSchedulePublished ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
                   Status: <strong className={isSchedulePublished ? 'text-emerald-300' : 'text-amber-300'}>
@@ -336,9 +336,9 @@ export const AdminEventSchedule: React.FC = () => {
             </div>
 
             {/* Card 2: 1-Click Announcement Banner Switch & Quick Toggle */}
-            <div className="p-5 sm:p-6 rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
+            <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <Megaphone className="w-5 h-5 text-amber-400 shrink-0" />
                     <h3 className="font-extrabold text-white text-base sm:text-lg">Top Announcement Banner</h3>
@@ -351,9 +351,9 @@ export const AdminEventSchedule: React.FC = () => {
                 <button
                   disabled={savingBanner}
                   onClick={handleToggleBannerQuick}
-                  className={`px-3.5 py-2 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shrink-0 border ${
+                  className={`w-full sm:w-auto px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shrink-0 border shadow-md ${
                     isBannerActive
-                      ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 border-amber-300/40 shadow-lg'
+                      ? 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 border-amber-300/40'
                       : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-amber-500/40'
                   }`}
                 >
@@ -378,7 +378,7 @@ export const AdminEventSchedule: React.FC = () => {
                     value={bannerHeadline}
                     onChange={(e) => setBannerHeadline(e.target.value)}
                     placeholder="Banner Headline (e.g., ✨ Festival Schedule & Competitions Announced!)"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400 font-semibold"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-amber-400 font-semibold"
                   />
                 </div>
                 <div>
@@ -387,14 +387,14 @@ export const AdminEventSchedule: React.FC = () => {
                     value={bannerMessage}
                     onChange={(e) => setBannerMessage(e.target.value)}
                     placeholder="Banner message (e.g., 🪔 Pooja: 9:00 AM | 🎨 Rangoli Competition: 2:00 PM)"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-xs focus:outline-none focus:border-amber-400"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                   />
                 </div>
                 <div className="flex justify-end">
                   <button
                     type="submit"
                     disabled={savingBanner}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 active:scale-95 transition"
+                    className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 active:scale-95 transition"
                   >
                     Save Banner Text
                   </button>
@@ -405,10 +405,10 @@ export const AdminEventSchedule: React.FC = () => {
           </div>
 
           {/* Schedule Events Timeline Manager */}
-          <div className="p-5 sm:p-6 rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl">
+          <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 shadow-xl">
             
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-500/20 pb-4">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 border-b border-amber-500/20 pb-4">
+              <div className="min-w-0">
                 <h3 className="font-extrabold text-white text-base sm:text-lg flex items-center gap-2">
                   <Layers className="w-5 h-5 text-amber-400 shrink-0" />
                   Celebration Schedule Timeline
@@ -418,21 +418,21 @@ export const AdminEventSchedule: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={handleSeedDefaults}
-                  className="px-3.5 py-2 rounded-xl font-bold text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 active:scale-95 transition flex items-center gap-1.5"
+                  className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl font-bold text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 active:scale-95 transition flex items-center justify-center gap-1.5"
                   title={schedules.length === 0 ? "Load Festive Templates" : "Reset & Reload Templates"}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                   <span>{schedules.length === 0 ? 'Load Festive Template' : 'Reload / Reset Templates'}</span>
                 </button>
 
                 <button
                   onClick={handleOpenAdd}
-                  className="px-4 py-2 rounded-xl font-bold gold-button text-amber-950 active:scale-95 transition text-xs flex items-center gap-1.5 shadow-md"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold gold-button text-amber-950 active:scale-95 transition text-xs flex items-center justify-center gap-1.5 shadow-md"
                 >
-                  <PlusCircle className="w-4 h-4 text-amber-950" />
+                  <PlusCircle className="w-4 h-4 text-amber-950 shrink-0" />
                   <span>Add Event</span>
                 </button>
               </div>
@@ -496,24 +496,27 @@ export const AdminEventSchedule: React.FC = () => {
                       </div>
 
                       {item.description && (
-                        <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                        <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60 break-words">
                           {item.description}
                         </p>
                       )}
 
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-300 pt-2 border-t border-slate-800/80">
-                        <span className="flex items-center gap-1 font-semibold text-amber-300">
-                          <Calendar className="w-3 h-3 text-amber-400" />
-                          {item.event_date}
-                        </span>
-                        <span className="flex items-center gap-1 font-mono text-emerald-300">
-                          <Clock className="w-3 h-3 text-emerald-400" />
-                          {item.start_time}{item.end_time ? ` - ${item.end_time}` : ''}
-                        </span>
-                        <span className="flex items-center gap-1 text-slate-400">
-                          <MapPin className="w-3 h-3 text-rose-400" />
-                          {item.venue}
-                        </span>
+                      <div className="space-y-1.5 pt-3 border-t border-slate-800/80 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-1.5 text-[11px] sm:text-xs">
+                          <span className="flex items-center gap-1 font-semibold text-amber-300">
+                            <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>{item.event_date}</span>
+                          </span>
+                          <span className="flex items-center gap-1 font-mono text-emerald-300 font-bold bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-500/20 shrink-0">
+                            <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{item.start_time}{item.end_time ? ` - ${item.end_time}` : ''}</span>
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400">
+                          <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                          <span className="break-words font-medium">{item.venue}</span>
+                        </div>
                       </div>
                     </div>
                   );
@@ -528,15 +531,15 @@ export const AdminEventSchedule: React.FC = () => {
 
       {/* Add / Edit Event Modal */}
       {showEventModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-lg festive-glass rounded-3xl border border-amber-500/30 p-6 text-white space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-lg festive-glass rounded-2xl sm:rounded-3xl border border-amber-500/30 p-4 sm:p-6 text-white space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
               <h3 className="text-base sm:text-lg font-bold text-gold-gradient">
                 {editingId ? 'Edit Celebration Event' : 'Add Celebration Event'}
               </h3>
               <button
                 onClick={() => setShowEventModal(false)}
-                className="text-slate-400 hover:text-white text-xs font-bold"
+                className="text-slate-400 hover:text-white text-xs font-bold p-1"
               >
                 ✕ Close
               </button>
@@ -552,7 +555,7 @@ export const AdminEventSchedule: React.FC = () => {
                   value={eventForm.title}
                   onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
                   placeholder="e.g., Inter-Batch Rangoli Competition / Maha Ganapati Pooja"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -562,7 +565,7 @@ export const AdminEventSchedule: React.FC = () => {
                   <select
                     value={eventForm.category}
                     onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                   >
                     <option value="POOJA">🪔 Pooja & Aarti</option>
                     <option value="RANGOLI">🎨 Rangoli Event</option>
@@ -582,7 +585,7 @@ export const AdminEventSchedule: React.FC = () => {
                     value={eventForm.event_date}
                     onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })}
                     placeholder="e.g., Day 2 (Sept 8) or Every Morning"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                   />
                 </div>
               </div>
@@ -596,7 +599,7 @@ export const AdminEventSchedule: React.FC = () => {
                     value={eventForm.start_time}
                     onChange={(e) => setEventForm({ ...eventForm, start_time: e.target.value })}
                     placeholder="e.g., 09:00 AM or 02:00 PM"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                   />
                 </div>
 
@@ -607,7 +610,7 @@ export const AdminEventSchedule: React.FC = () => {
                     value={eventForm.end_time}
                     onChange={(e) => setEventForm({ ...eventForm, end_time: e.target.value })}
                     placeholder="e.g., 11:30 AM or 05:00 PM"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                   />
                 </div>
               </div>
@@ -620,7 +623,7 @@ export const AdminEventSchedule: React.FC = () => {
                   value={eventForm.venue}
                   onChange={(e) => setEventForm({ ...eventForm, venue: e.target.value })}
                   placeholder="e.g., Main College Quadrangle / Celebration Arena"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -631,7 +634,7 @@ export const AdminEventSchedule: React.FC = () => {
                   value={eventForm.description}
                   onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
                   placeholder="Details, competition rules, registration link, or devotional schedule instructions..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
               </div>
 
@@ -648,17 +651,17 @@ export const AdminEventSchedule: React.FC = () => {
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowEventModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold gold-button text-amber-950 shadow-md active:scale-95 transition"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold gold-button text-amber-950 shadow-md active:scale-95 transition text-center"
                 >
                   {editingId ? 'Save Changes' : 'Add to Schedule'}
                 </button>
