@@ -1,116 +1,170 @@
-# 🪔 Vinayaka Chavithi Fund Transparency System
+# 🪔 Vinayaka Chavithi Celebration Fund & Event Transparency Portal
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-amber.svg)](LICENSE)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/Frontend-React%2019%20%2B%20TypeScript-61DAFB.svg)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind%20v4-38B2AC.svg)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Build-Vite%208-646CFF.svg)](https://vitejs.dev/)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%20%2F%20SQLite-4169E1.svg)](https://www.sqlalchemy.org/)
 
-> **Central Principle**: The celebration fund itself is the immutable source of truth, while the web platform provides a 100% transparent, real-time, read-only public view of all verified donations and festival expenses with **₹0 payment gateway commission**.
-
----
-
-## 🌟 Key Features & Highlights
-
-- **Zero Payment Gateway Commission**: Donors pay directly to the committee's bank account via **UPI QR Code** or native **mobile UPI app deep-linking** (GPay, PhonePe, Paytm, BHIM).
-- **Donor Submission & Admin Verification Flow**: Donors submit transaction reference details after paying $\rightarrow$ creates a `PENDING` record $\rightarrow$ Admin verifies credit against bank statements $\rightarrow$ reflects publicly as `VERIFIED`.
-- **Public Read-Only Transparency Dashboard**:
-  - Live Collection Progress visualizer (`Collected / Target`).
-  - Real-time calculations: Total Collected, Total Spent, Pending Expense Commitments, Available Balance, and Committed Balance.
-  - Public Donor Register with option for anonymous donor privacy listing.
-  - Expense Utilization Breakdown (Spent vs. Planned Commitments).
-- **Printable Transparency QR Flyer**: Dynamically generates a printable poster flyer with QR code linking to the public page so organizers can print and post it near the mandap.
-- **Admin Control Portal**:
-  - Secure JWT Bearer Token Authentication.
-  - Pending Donation Verification Queue with 1-click **Confirm & Verify** or **Reject** actions.
-  - Manual Entry for cash/offline contributions.
-  - Soft Transaction Voiding with mandatory reason requirement (financial history is preserved).
-  - Target amount, UPI ID, UPI Name, and Public Slug configuration.
-  - Immutable Security Audit Trail.
+> **Core Philosophy**: A 100% transparent, community-driven festival financial management and celebration schedule system. Enables direct donor-to-committee bank transfers with **₹0 payment gateway commissions**, automated live collection tracking, public expense registers, and festive event announcements.
 
 ---
 
-## 📐 System Architecture & Money Flow
+## 📑 Table of Contents
+
+- [✨ Key Features](#-key-features)
+- [🏛️ System Architecture & Money Flow](#️-system-architecture--money-flow)
+- [🧮 Financial Integrity & Formulas](#-financial-integrity--formulas)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [🚀 Quickstart & Local Installation](#-quickstart--local-installation)
+  - [Prerequisites](#prerequisites)
+  - [1. Clone Repository](#1-clone-repository)
+  - [2. Backend Setup (FastAPI)](#2-backend-setup-fastapi)
+  - [3. Frontend Setup (React + Vite)](#3-frontend-setup-react--vite)
+- [🔑 Default Credentials & Portal Routes](#-default-credentials--portal-routes)
+- [🌐 Production Deployment Guide](#-production-deployment-guide)
+  - [Backend on Render](#backend-on-render)
+  - [Frontend on Vercel / Netlify / Render](#frontend-on-vercel--netlify--render)
+- [📱 Multi-Screen Responsive Design](#-multi-screen-responsive-design)
+- [🔒 Security & Audit Logging](#-security--audit-logging)
+
+---
+
+## ✨ Key Features
+
+### 1. 💸 Zero-Commission Direct UPI Contributions
+- **Direct Bank Settlement**: Payments go directly into the committee's bank account via **Dynamic UPI QR Code** (desktop) or **Native UPI App Deep-Linking** (GPay, PhonePe, Paytm, BHIM on mobile devices).
+- **Zero Third-Party Cut**: Eliminates 2-3% payment aggregator transaction fees. Every rupee donated goes straight to festival celebrations.
+
+### 2. 🪔 Public Transparency Portal (`/fund/:slug`)
+- **Live Goal Progress**: Real-time progress bar tracking total collected vs. target celebration budget.
+- **5-Metric Financial Health Bar**: Instant visibility into *Total Collected*, *Total Spent*, *Pending Commitments*, *Available Balance*, and *Committed Balance*.
+- **Verified Donor Register**: Public list of verified contributors with donation amounts, timestamps, academic years/roles, and optional public/anonymous visibility.
+- **Categorized Expense Register**: Granular breakdown of idol costs, decorations, sound/lighting, Vedic pooja essentials, and community meals (Maha Prasadam).
+- **Printable Mandap QR Poster**: Organizers can generate and print a physical poster flyer with a scannable QR code to display at the celebration venue.
+
+### 3. 📅 Celebration Schedule & Festive Announcement System
+- **Featured Celebration Cards**: Prominently displays festival timelines including *Ganesh Sthapana & Maha Pooja*, *Inter-Department Rangoli Competition*, *Daily Evening Aarti*, *Maha Prasadam*, and *Grand Visarjan Procession*.
+- **Top Announcement Banner**: High-priority alert banner across the public portal for urgent updates and timing changes.
+- **Hero Jump Action**: 1-click smooth-scroll button to jump straight into the celebration schedule.
+- **Admin Schedule Manager**: Full administrative control at `/admin/schedule` to add, edit, reorder, delete, feature, or 1-click reload festive schedule templates.
+
+### 4. 🛡️ Committee Admin Dashboard (`/admin/dashboard`)
+- **Pending Verification Queue**: Match incoming donor transaction references against committee bank statements with 1-click **Confirm & Verify** or **Reject**.
+- **Donor Visibility Management**: 1-click toggle to make a donor's name **Public** or **Anonymous** on the public register if requested.
+- **Manual Cash Entry**: Fast entry form to record offline cash donations and physical receipts.
+- **Expense Recording & Status Tracking**: Track expenses as either `SPENT` (completed payment) or `PENDING` (planned commitment).
+- **Fund Settings & Customization**: Update goal target, UPI ID, organizer details, and public URL slug.
+- **Immutable Security Audit Trail**: Every transaction creation, verification, rejection, and edit is logged with administrator IDs, timestamps, and previous/new state values.
+
+---
+
+## 🏛️ System Architecture & Money Flow
 
 ```
-                      DONOR
-                        │
-                        ▼
-            Website Donation Modal
-                        │
-         ┌──────────────┴──────────────┐
-         ▼                             ▼
-   Scan UPI QR            Tap "Pay via UPI App"
- (Desktop / 2nd Device)     (Direct Mobile Deep-Link)
-         │                             │
-         └──────────────┬──────────────┘
-                        │
-                        ▼
-         GPay / PhonePe / Paytm / BHIM
-                        │
-                        ▼ (₹0 Commission Direct Transfer)
-            Committee Bank Account
-                        │
-                        ▼
-          Donor Submits Reference Details
-                        │
-                        ▼
-                FastAPI Backend (PENDING)
-                        │
-                        ▼
-           Admin Verifies Bank Credit
-                        │
-                        ▼
-                Status: VERIFIED
-                        │
-                        ▼
-         Public Transparency Dashboard Updates
+                                  DONOR
+                                    │
+                                    ▼
+                        Public Fund Portal (/fund/:slug)
+                                    │
+                     ┌──────────────┴──────────────┐
+                     ▼                             ▼
+               Scan UPI QR                Tap "Pay via UPI App"
+          (Desktop / Laptop)             (Mobile App Deep-Link)
+                     │                             │
+                     └──────────────┬──────────────┘
+                                    │
+                                    ▼
+                      GPay / PhonePe / Paytm / BHIM
+                                    │
+                                    ▼ (Direct Transfer • ₹0 Commission)
+                        Committee Bank Account
+                                    │
+                                    ▼
+                      Donor Enters Transaction Ref
+                                    │
+                                    ▼
+                         FastAPI API (`PENDING`)
+                                    │
+                                    ▼
+                         Admin Verifies Bank Credit
+                                    │
+                                    ▼
+                       Status Updated to `VERIFIED`
+                                    │
+                                    ▼
+                   Live Public Dashboard Automatically Updates
 ```
+
+---
+
+## 🧮 Financial Integrity & Formulas
+
+The platform guarantees mathematical precision and prevents balance discrepancies:
+
+1. **Total Collected**:
+   $$\text{Total Collected} = \sum \text{Amount of all donations where status} = \text{VERIFIED}$$
+
+2. **Total Spent**:
+   $$\text{Total Spent} = \sum \text{Amount of all expenses where status} = \text{SPENT}$$
+
+3. **Pending Commitments**:
+   $$\text{Pending Expenses} = \sum \text{Amount of all expenses where status} = \text{PENDING}$$
+
+4. **Available Balance**:
+   $$\text{Available Balance} = \text{Total Collected} - \text{Total Spent}$$
+
+5. **Committed Net Balance**:
+   $$\text{Committed Balance} = \text{Total Collected} - \text{Total Spent} - \text{Pending Expenses}$$
+
+6. **Target Goal Percentage**:
+   $$\text{Collection Percentage} = \min\left(100, \frac{\text{Total Collected}}{\text{Target Amount}} \times 100\right)$$
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend Framework** | React 19 + TypeScript + Vite |
-| **Styling & Theme** | Tailwind CSS v4 (Festive Marigold Gold & Saffron Glassmorphism) |
-| **Icons & Visuals** | Lucide Icons + Canvas-Confetti |
-| **Backend API** | Python 3.11 + FastAPI + Pydantic v2 |
-| **Database & ORM** | SQLite (default out-of-the-box) / PostgreSQL compatible via SQLAlchemy |
-| **Security & Auth** | Passlib (Bcrypt) + PyJWT OAuth2 Bearer Tokens |
-| **QR Generation** | `qrcode.react` (Frontend) + `qrcode[pil]` (Backend API) |
+### Frontend
+- **Framework**: React 19 with TypeScript
+- **Bundler & Tooling**: Vite 8 with Hot Module Replacement (HMR)
+- **Styling**: Tailwind CSS v4 with custom Festive Marigold Gold, Saffron, and Glassmorphic themes
+- **Routing**: React Router DOM v6
+- **Icons & Animation**: Lucide React Icons, Canvas-Confetti, Tailwind micro-animations
+- **QR Generation**: `qrcode.react` (SVG & Canvas rendering)
+- **HTTP Client**: Axios with automatic JWT Bearer interceptors
+
+### Backend
+- **Framework**: Python 3.11+ with FastAPI
+- **Data Validation & Schemas**: Pydantic v2
+- **ORM & Database**: SQLAlchemy (SQLite for local development, PostgreSQL for production)
+- **Database Migrations**: Alembic with idempotent existence checks
+- **Security & Authentication**: Passlib with Bcrypt password hashing, PyJWT OAuth2 Bearer Tokens
+- **QR Utilities**: Python `qrcode[pil]`
 
 ---
 
-## 🚀 Quickstart & Setup Guide
+## 🚀 Quickstart & Local Installation
 
 ### Prerequisites
-Make sure you have installed on your machine:
-- **Node.js** (v18+ recommended) & `npm`
-- **Python** (v3.10+ recommended) & `pip`
+Make sure you have the following installed:
+- **Node.js** (v18.x or higher) and `npm`
+- **Python** (v3.10 or higher) and `pip`
 - **Git**
 
 ---
 
-### Step 1: Clone the Repository
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/SatyaTejaChukka/vinayaka_fund.git
 cd vinayaka_fund
 ```
 
-*(If using SSH: `git clone git@github.com:SatyaTejaChukka/vinayaka_fund.git`)*
-
 ---
 
-### Step 2: Setup & Run Backend (FastAPI)
+### 2. Backend Setup (FastAPI)
 
-1. Navigate to the project root:
-   ```bash
-   # Make sure you are in the vinayaka_fund directory
-   ```
-
-2. Create a Python Virtual Environment:
+1. **Create and activate a Python virtual environment**:
    - **Windows (PowerShell)**:
      ```powershell
      python -m venv backend/venv
@@ -122,102 +176,113 @@ cd vinayaka_fund
      source backend/venv/bin/activate
      ```
 
-3. Install Backend Dependencies:
+2. **Install backend dependencies**:
    ```bash
    pip install -r backend/requirements.txt
    ```
 
-4. Seed Default Admin User & Demo Celebration Data:
+3. **Seed database with default admin & festival data**:
    ```bash
    python backend/seed.py
    ```
-   *Output*:
-   > Successfully seeded demo data!  
-   > Default Admin Email: `admin@vinayaka.org`  
-   > Default Admin Password: `admin123`  
-   > Default Fund Slug: `vinayaka-chavithi-2026`
+   *Output confirmation:*
+   ```text
+   Successfully seeded demo data!
+   Default Admin Email: admin@vinayaka.org
+   Default Admin Password: admin123
+   Default Fund Slug: vinayaka-chavithi-2026
+   ```
 
-5. Start the FastAPI Backend Dev Server:
+4. **Run the FastAPI development server**:
    ```bash
    python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload
    ```
-   - API Running at: `http://127.0.0.1:8000`
-   - Interactive OpenAPI Docs: `http://127.0.0.1:8000/docs`
+   - **Backend API**: `http://127.0.0.1:8000`
+   - **Interactive API Docs (Swagger UI)**: `http://127.0.0.1:8000/docs`
 
 ---
 
-### Step 3: Setup & Run Frontend (React + Vite)
+### 3. Frontend Setup (React + Vite)
 
 Open a **new terminal window**:
 
-1. Navigate to the `frontend` directory:
+1. **Navigate to the frontend folder**:
    ```bash
    cd frontend
    ```
 
-2. Install Node Dependencies:
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. Start the Frontend Vite Development Server:
+3. **Start the Vite development server**:
    ```bash
-   npm run dev -- --port 5173
+   npm run dev
    ```
-   - App Running at: `http://localhost:5173/fund/vinayaka-chavithi-2026`
+   - **Public Portal**: `http://localhost:5173/fund/vinayaka-chavithi-2026`
+   - **Admin Login**: `http://localhost:5173/admin/login`
 
 ---
 
-## 🔑 Default Credentials & Public URLs
+## 🔑 Default Credentials & Portal Routes
 
-| Page | URL Path | Access |
-| :--- | :--- | :--- |
-| **Public Transparency Page** | `http://localhost:5173/fund/vinayaka-chavithi-2026` | Public (No login required) |
-| **Committee Admin Login** | `http://localhost:5173/admin/login` | Email: `admin@vinayaka.org`<br>Password: `admin123` |
-| **Admin Control Dashboard** | `http://localhost:5173/admin/dashboard` | Admin Only |
-| **Donations Verification** | `http://localhost:5173/admin/donations` | Admin Only |
-| **Expense Tracker** | `http://localhost:5173/admin/expenses` | Admin Only |
-| **Fund Settings & UPI Setup** | `http://localhost:5173/admin/fund-settings` | Admin Only |
-| **Audit Logs** | `http://localhost:5173/admin/audit-logs` | Admin Only |
-
----
-
-## 🧮 Financial Formula Definitions
-
-1. **Total Collected**:
-   $$\text{Total Collected} = \sum \text{amount for all donations where status} = \text{`VERIFIED`}$$
-
-2. **Total Spent**:
-   $$\text{Total Spent} = \sum \text{amount for all expenses where status} = \text{`SPENT`}$$
-
-3. **Pending Commitments**:
-   $$\text{Pending Expenses} = \sum \text{amount for all expenses where status} = \text{`PENDING`}$$
-
-4. **Available Balance**:
-   $$\text{Available Balance} = \text{Total Collected} - \text{Total Spent}$$
-
-5. **Committed Balance**:
-   $$\text{Committed Balance} = \text{Total Collected} - \text{Total Spent} - \text{Pending Expenses}$$
+| Portal Section | URL Route | Access Level | Description |
+| :--- | :--- | :--- | :--- |
+| **Public Transparency Portal** | `/fund/vinayaka-chavithi-2026` | Public | Live goal progress, verified donations, expenses, and festival schedule. |
+| **Admin Login** | `/admin/login` | Public | Secure admin login. Default: `admin@vinayaka.org` / `admin123` |
+| **Admin Dashboard** | `/admin/dashboard` | Admin | Real-time overview, cash entry, expense recording, and verification queue. |
+| **Schedule & Announcements** | `/admin/schedule` | Admin | Manage festival timeline, Rangoli competition, and announcement banners. |
+| **Donations Register** | `/admin/donations` | Admin | Full donation history, search, filters, and donor name visibility controls. |
+| **Expense Tracker** | `/admin/expenses` | Admin | Expense records, vendor details, and planned commitments. |
+| **Fund Settings** | `/admin/fund-settings` | Admin | Target amount, UPI ID, QR setup, and public slug management. |
+| **Audit Logs** | `/admin/audit-logs` | Admin | Immutable security and transaction audit trail. |
 
 ---
 
-## 🛠️ GitHub Push Instructions (If encountering SSH key error)
+## 🌐 Production Deployment Guide
 
-If `git push -u origin main` gives a `Permission denied (publickey)` error, use the HTTPS remote URL or set the main branch:
+### Backend on Render
+1. Create a **Web Service** pointing to your repository.
+2. Set **Root Directory**: `backend`
+3. **Build Command**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Start Command**:
+   ```bash
+   alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+5. **Environment Variables**:
+   - `DATABASE_URL`: Your PostgreSQL connection string.
+   - `SECRET_KEY`: A secure random secret string.
+   - `ALGORITHM`: `HS256`
+   - `ACCESS_TOKEN_EXPIRE_MINUTES`: `1440`
 
-```bash
-# Rename current branch to main
-git branch -M main
-
-# Change remote URL to HTTPS if SSH key is not added to GitHub:
-git remote set-url origin https://github.com/SatyaTejaChukka/vinayaka_fund.git
-
-# Push to GitHub
-git push -u origin main
-```
+### Frontend on Vercel / Netlify / Render
+1. Set **Root Directory**: `frontend`
+2. **Build Command**:
+   ```bash
+   npm run build
+   ```
+3. **Output Directory**: `dist`
+4. **Environment Variables**:
+   - `VITE_API_URL`: Your deployed backend API URL (e.g., `https://vinayaka-fund-api.onrender.com`).
 
 ---
 
-## 📄 License
+## 📱 Multi-Screen Responsive Design
 
-This project is open-source under the [MIT License](LICENSE). Built for community trust and 100% financial transparency. 🪔
+The user interface has been optimized for all screen sizes:
+- **Mobile Phones (320px – 480px)**: Compact layouts, full-width touch targets, stacked metric headers, and horizontal scroll-safe monospace badges.
+- **Tablets & Phablets (640px – 1024px)**: 2-column adaptive grids for schedule events and metric cards.
+- **Laptops & Large Desktops (1024px – 1920px+)**: 3-column celebration event grids and centered max-width containment (`max-w-7xl`).
+
+---
+
+## 🔒 Security & Audit Logging
+
+- **JWT Authentication**: Secure token authentication with expiration and automatic route protection.
+- **Password Security**: Passwords hashed using Bcrypt.
+- **Audit Trails**: Non-destructive logging records all critical events (`CREATE`, `UPDATE`, `VERIFY`, `REJECT`, `DELETE`) with admin identity and state diffs.
+- **SQL Injection & XSS Protection**: Powered by SQLAlchemy parameterized queries and Pydantic request sanitization.
