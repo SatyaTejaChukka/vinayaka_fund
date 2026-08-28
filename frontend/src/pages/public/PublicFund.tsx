@@ -56,7 +56,7 @@ export const PublicFund: React.FC = () => {
   const [isDonateOpen, setIsDonateOpen] = useState<boolean>(false);
   const [isCashOpen, setIsCashOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'donations' | 'expenses' | 'schedule'>('donations');
+  const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
   const [selectedYear, setSelectedYear] = useState<string>('ALL_YEARS');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_high'>('newest');
@@ -286,14 +286,13 @@ export const PublicFund: React.FC = () => {
               {schedulePayload.is_schedule_published && schedulePayload.events.length > 0 && (
                 <button
                   onClick={() => {
-                    setActiveTab('schedule');
-                    const el = document.getElementById('donations-section');
+                    const el = document.getElementById('celebration-schedule-section');
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                   }}
                   className="px-4 py-2.5 rounded-xl font-extrabold gold-button text-amber-950 text-xs flex items-center justify-center gap-1.5 active:scale-95 transition shadow-lg shrink-0 self-start md:self-auto"
                 >
                   <Calendar className="w-4 h-4 text-amber-950" />
-                  <span>View Full Schedule</span>
+                  <span>View Full Schedule & Timings ↓</span>
                 </button>
               )}
             </div>
@@ -315,6 +314,22 @@ export const PublicFund: React.FC = () => {
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed px-4">
               {fund.description}
             </p>
+          )}
+
+          {/* Unmissable Hero Schedule & Rangoli Quick Jump Pill */}
+          {schedulePayload?.is_schedule_published && schedulePayload.events.length > 0 && (
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  const el = document.getElementById('celebration-schedule-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-purple-500/25 to-amber-500/20 border border-amber-500/40 text-amber-200 text-xs sm:text-sm font-black hover:scale-105 active:scale-95 transition shadow-xl cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-amber-400 diya-pulse" />
+                <span>🪔 Event Schedule & Rangoli Competition ({schedulePayload.events.length} Events) ↓</span>
+              </button>
+            </div>
           )}
         </section>
 
@@ -422,13 +437,110 @@ export const PublicFund: React.FC = () => {
 
         </section>
 
+        {/* Dedicated Celebration Schedule & Rangoli Competition Section */}
+        {schedulePayload?.is_schedule_published && schedulePayload.events.length > 0 && (
+          <section id="celebration-schedule-section" className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-6 shadow-2xl relative overflow-hidden">
+            
+            {/* Header with Diya Pulse and Category Highlight */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-500/20 pb-5">
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-sm shrink-0 border border-amber-500/30 diya-pulse">
+                    <Calendar className="w-4 h-4 text-amber-300" />
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-extrabold uppercase tracking-widest px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Official Festival Schedule
+                  </span>
+                  <span className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold flex items-center gap-1">
+                    <Palette className="w-3 h-3 text-purple-400" />
+                    <span>Includes Rangoli Competition</span>
+                  </span>
+                </div>
+
+                <h2 className="text-xl sm:text-3xl font-black text-gold-gradient tracking-tight">
+                  Celebration Schedule & Event Highlights
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Daily Vedic Pooja timings, Inter-Department Rangoli Competition rules & venue, Maha Prasadam, and Visarjan details.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-amber-300 font-bold bg-slate-950/80 px-4 py-2.5 rounded-2xl border border-amber-500/30 shrink-0 self-start md:self-auto shadow-md">
+                <Flame className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>{schedulePayload.events.length} Events Scheduled</span>
+              </div>
+            </div>
+
+            {/* Event Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {schedulePayload.events.map((event) => {
+                const meta = SCHEDULE_CATEGORY_META[event.category] || SCHEDULE_CATEGORY_META.OTHER;
+                return (
+                  <div
+                    key={event.id}
+                    className={`p-4 sm:p-5 rounded-2xl bg-slate-900/90 border transition space-y-3.5 shadow-lg relative flex flex-col justify-between ${
+                      event.is_highlighted
+                        ? 'border-amber-500/50 hover:border-amber-400 shadow-amber-500/5'
+                        : 'border-slate-700/60 hover:border-amber-500/30'
+                    }`}
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1 ${meta.badge}`}>
+                          {meta.icon}
+                          <span>{meta.label}</span>
+                        </span>
+                        {event.is_highlighted && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+                            <span>Featured</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-extrabold text-white text-sm sm:text-base leading-snug">
+                        {event.title}
+                      </h3>
+
+                      {event.description && (
+                        <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/50 p-3 rounded-xl border border-slate-800/80">
+                          {event.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5 pt-3 border-t border-slate-800/80 text-xs">
+                      <div className="flex items-center justify-between text-slate-300 text-[11px] gap-2">
+                        <span className="flex items-center gap-1 font-bold text-amber-300">
+                          <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          {event.event_date}
+                        </span>
+                        <span className="flex items-center gap-1 font-mono text-emerald-300 font-bold shrink-0">
+                          <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          {event.start_time}{event.end_time ? ` - ${event.end_time}` : ''}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                        <span className="truncate">{event.venue}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+          </section>
+        )}
+
         {/* Tabbed Transaction Register */}
         <section id="donations-section" className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl festive-glass border border-amber-500/30 space-y-4 sm:space-y-6 shadow-xl">
           
           {/* Tab Selector & Export Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-amber-500/20 pb-4 gap-3">
-            {/* Segmented Tab Controls */}
-            <div className={`grid ${schedulePayload?.is_schedule_published && schedulePayload.events.length > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 sm:gap-2 sm:flex sm:items-center w-full sm:w-auto p-1 rounded-2xl bg-slate-950/60 border border-amber-500/20`}>
+            {/* Segmented Tab Controls (Donations & Expenses) */}
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 sm:flex sm:items-center w-full sm:w-auto p-1 rounded-2xl bg-slate-950/60 border border-amber-500/20">
               <button
                 onClick={() => setActiveTab('donations')}
                 className={`py-2 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 ${
@@ -462,25 +574,6 @@ export const PublicFund: React.FC = () => {
                   {expenses.length}
                 </span>
               </button>
-
-              {schedulePayload?.is_schedule_published && schedulePayload.events.length > 0 && (
-                <button
-                  onClick={() => setActiveTab('schedule')}
-                  className={`py-2 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 ${
-                    activeTab === 'schedule'
-                      ? 'gold-button text-amber-950 shadow-md'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
-                  }`}
-                >
-                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Schedule</span>
-                  <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-extrabold ${
-                    activeTab === 'schedule' ? 'bg-amber-950/20 text-amber-950' : 'bg-slate-800 text-slate-300'
-                  }`}>
-                    {schedulePayload.events.length}
-                  </span>
-                </button>
-              )}
             </div>
 
             {/* CSV Export Button for active tab */}
@@ -813,84 +906,6 @@ export const PublicFund: React.FC = () => {
                   ))}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Schedule & Events Tab View */}
-          {activeTab === 'schedule' && schedulePayload?.is_schedule_published && (
-            <div className="space-y-4">
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-slate-900/60 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h3 className="font-extrabold text-white text-base sm:text-lg flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-amber-400 shrink-0" />
-                    Festival Timeline & Competition Schedule
-                  </h3>
-                  <p className="text-xs text-slate-300 mt-0.5">
-                    Official celebration timings, Rangoli competition venue details, and ritual schedules.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-amber-300 font-bold bg-amber-500/20 px-3 py-1.5 rounded-xl border border-amber-500/30 shrink-0 self-start sm:self-auto">
-                  <Flame className="w-4 h-4 text-amber-400" />
-                  <span>All Devotees & Batches Welcome</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {schedulePayload.events.map((event) => {
-                  const meta = SCHEDULE_CATEGORY_META[event.category] || SCHEDULE_CATEGORY_META.OTHER;
-                  return (
-                    <div
-                      key={event.id}
-                      className={`p-4 sm:p-5 rounded-2xl bg-slate-900/90 border transition space-y-3 shadow-md relative overflow-hidden ${
-                        event.is_highlighted
-                          ? 'border-amber-500/50 hover:border-amber-400'
-                          : 'border-slate-700/60 hover:border-amber-500/30'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1 ${meta.badge}`}>
-                              {meta.icon}
-                              <span>{meta.label}</span>
-                            </span>
-                            {event.is_highlighted && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                                <Sparkles className="w-2.5 h-2.5 text-amber-400" />
-                                <span>Featured Highlight</span>
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="font-extrabold text-white text-sm sm:text-base leading-snug">
-                            {event.title}
-                          </h4>
-                        </div>
-                      </div>
-
-                      {event.description && (
-                        <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-slate-800/80">
-                          {event.description}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-300 pt-2 border-t border-slate-800/80">
-                        <span className="flex items-center gap-1 font-bold text-amber-300">
-                          <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                          {event.event_date}
-                        </span>
-                        <span className="flex items-center gap-1 font-mono text-emerald-300 font-bold">
-                          <Clock className="w-3.5 h-3.5 text-emerald-400" />
-                          {event.start_time}{event.end_time ? ` - ${event.end_time}` : ''}
-                        </span>
-                        <span className="flex items-center gap-1 text-slate-400">
-                          <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                          {event.venue}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           )}
 
