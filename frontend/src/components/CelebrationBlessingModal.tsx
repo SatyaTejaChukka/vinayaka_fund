@@ -23,28 +23,67 @@ export const CelebrationBlessingModal: React.FC<CelebrationBlessingModalProps> =
 }) => {
   useEffect(() => {
     if (isOpen) {
-      // Trigger full festive confetti celebration
+      // Marigold Flower Petal Palette: Banti Puvvulu (Yellow, Saffron Orange, Deep Coral), Chamanti, and Shimmering Gold Flakes
+      const marigoldPetalColors = [
+        '#ffb703', // Vivid Marigold Yellow
+        '#fb8500', // Saffron Orange
+        '#ffd166', // Golden Chamanti Petals
+        '#f48c06', // Deep Orange Petals
+        '#e63946', // Rose Vermilion Petals
+        '#fff3b0', // Sacred Akshinthalu / Light Petals
+        '#d4af37'  // Shimmering Gold Flakes
+      ];
+
+      // 1. Initial Overhead Marigold Pushpa Vrushti (Flower Petal Shower)
       confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.6 },
-        colors: ['#ffb703', '#fb8500', '#10b981', '#ffd166']
+        particleCount: 90,
+        spread: 100,
+        startVelocity: 35,
+        gravity: 0.65, // Gentle floating petals
+        scalar: 1.45, // Larger petal size for natural marigold flower look
+        ticks: 350,
+        origin: { y: 0.45 },
+        shapes: ['circle', 'square'],
+        colors: marigoldPetalColors
       });
 
+      // 2. High-speed Gold Flake Shimmer
+      confetti({
+        particleCount: 50,
+        spread: 80,
+        startVelocity: 45,
+        gravity: 0.8,
+        scalar: 0.9,
+        ticks: 300,
+        origin: { y: 0.5 },
+        colors: ['#ffe49e', '#ffd166', '#ffb703', '#ffffff']
+      });
+
+      // 3. Dual side marigold petal cannons for immersive blessing shower
       const timer = setTimeout(() => {
         confetti({
-          particleCount: 70,
+          particleCount: 65,
           angle: 60,
-          spread: 55,
-          origin: { x: 0, y: 0.7 }
+          spread: 65,
+          startVelocity: 42,
+          gravity: 0.65,
+          scalar: 1.35,
+          ticks: 350,
+          origin: { x: 0, y: 0.65 },
+          colors: marigoldPetalColors
         });
         confetti({
-          particleCount: 70,
+          particleCount: 65,
           angle: 120,
-          spread: 55,
-          origin: { x: 1, y: 0.7 }
+          spread: 65,
+          startVelocity: 42,
+          gravity: 0.65,
+          scalar: 1.35,
+          ticks: 350,
+          origin: { x: 1, y: 0.65 },
+          colors: marigoldPetalColors
         });
-      }, 250);
+      }, 280);
 
       return () => clearTimeout(timer);
     }
