@@ -358,8 +358,8 @@ export const PublicFund: React.FC = () => {
             amount={fund.total_collected}
             subtitle={`${fund.verified_donations_count} verified donations`}
             badge={`${safeCollectionPercentage}%`}
-            icon={<ArrowUpRight className="w-5 h-5 text-amber-400" />}
-            variant="amber"
+            icon={<ArrowDownLeft className="w-5 h-5 text-emerald-400" />}
+            variant="emerald"
           />
 
           <StatCard
@@ -367,7 +367,7 @@ export const PublicFund: React.FC = () => {
             amount={fund.total_spent}
             subtitle={`${fund.expenses_count} expenses recorded`}
             badge={`${safeExpensePercentage}% spent`}
-            icon={<ArrowDownLeft className="w-5 h-5 text-rose-400" />}
+            icon={<ArrowUpRight className="w-5 h-5 text-rose-400" />}
             variant="rose"
           />
 
@@ -549,7 +549,7 @@ export const PublicFund: React.FC = () => {
                     : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
                 }`}
               >
-                <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <ArrowDownLeft className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'donations' ? 'text-amber-950' : 'text-emerald-400'}`} />
                 <span className="truncate">Donations</span>
                 <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-extrabold ${
                   activeTab === 'donations' ? 'bg-amber-950/20 text-amber-950' : 'bg-slate-800 text-slate-300'
@@ -566,7 +566,7 @@ export const PublicFund: React.FC = () => {
                     : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
                 }`}
               >
-                <ArrowDownLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <ArrowUpRight className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'expenses' ? 'text-amber-950' : 'text-rose-400'}`} />
                 <span className="truncate">Expenses</span>
                 <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-extrabold ${
                   activeTab === 'expenses' ? 'bg-amber-950/20 text-amber-950' : 'bg-slate-800 text-slate-300'

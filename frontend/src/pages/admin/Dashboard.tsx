@@ -289,15 +289,15 @@ export const AdminDashboard: React.FC = () => {
           title="TOTAL COLLECTED"
           amount={fund.total_collected}
           subtitle={`${fund.verified_donations_count} verified donations`}
-          icon={<ArrowUpRight className="w-5 h-5 text-amber-400" />}
-          variant="amber"
+          icon={<ArrowDownLeft className="w-5 h-5 text-emerald-400" />}
+          variant="emerald"
         />
 
         <StatCard
           title="TOTAL SPENT"
           amount={fund.total_spent}
           subtitle={`${fund.expenses_count} recorded expenses`}
-          icon={<ArrowDownLeft className="w-5 h-5 text-rose-400" />}
+          icon={<ArrowUpRight className="w-5 h-5 text-rose-400" />}
           variant="rose"
         />
 
