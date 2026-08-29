@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import confetti from 'canvas-confetti';
 
 export interface ProgressBarProps {
   title?: string;
@@ -39,6 +40,56 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const [displayPercentage, setDisplayPercentage] = useState<number>(0);
   const [isMoving, setIsMoving] = useState<boolean>(false);
 
+  const triggerGoalVictoryConfetti = () => {
+    const marigoldColors = [
+      '#ffb703', // Marigold Yellow
+      '#fb8500', // Saffron Orange
+      '#ffd166', // Golden Chamanti
+      '#f48c06', // Deep Orange Petals
+      '#e63946', // Rose Vermilion
+      '#fff3b0', // Akshinthalu Light Gold
+      '#d4af37'  // Gold Flakes
+    ];
+
+    // Left victory cannon
+    confetti({
+      particleCount: 85,
+      angle: 60,
+      spread: 70,
+      origin: { x: 0, y: 0.65 },
+      scalar: 1.4,
+      gravity: 0.65,
+      ticks: 350,
+      colors: marigoldColors
+    });
+
+    // Right victory cannon
+    confetti({
+      particleCount: 85,
+      angle: 120,
+      spread: 70,
+      origin: { x: 1, y: 0.65 },
+      scalar: 1.4,
+      gravity: 0.65,
+      ticks: 350,
+      colors: marigoldColors
+    });
+
+    // Center victory shower
+    setTimeout(() => {
+      confetti({
+        particleCount: 110,
+        spread: 120,
+        origin: { y: 0.45 },
+        startVelocity: 40,
+        scalar: 1.35,
+        gravity: 0.68,
+        ticks: 350,
+        colors: marigoldColors
+      });
+    }, 260);
+  };
+
   useEffect(() => {
     // Reset to 0% and start realistic running journey after 300ms delay
     setAnimatedPercentage(0);
@@ -68,6 +119,11 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         } else {
           setDisplayPercentage(safePercentage);
           setIsMoving(false); // Stop running animation once target is reached!
+
+          // Trigger victory 100% milestone celebration confetti!
+          if (safePercentage >= 100) {
+            triggerGoalVictoryConfetti();
+          }
         }
       };
 
@@ -121,6 +177,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     e.stopPropagation();
     if (isMoving) return;
     setIsMoving(true);
+    if (safePercentage >= 100) {
+      triggerGoalVictoryConfetti();
+    }
     setTimeout(() => {
       setIsMoving(false);
     }, 1200);
