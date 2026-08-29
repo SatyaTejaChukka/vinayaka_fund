@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface StatCardProps {
   title: string;
@@ -17,6 +17,38 @@ export const StatCard: React.FC<StatCardProps> = ({
   variant = 'amber',
   badge
 }) => {
+  const [displayAmount, setDisplayAmount] = useState<number>(0);
+
+  useEffect(() => {
+    setDisplayAmount(0);
+    const targetVal = Number.isFinite(amount) ? amount : 0;
+    if (targetVal === 0) return;
+
+    const duration = 1800;
+    const startTime = performance.now();
+
+    const updateCounter = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      // Cubic ease-out
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const currentVal = Math.round(easeProgress * targetVal);
+      setDisplayAmount(currentVal);
+
+      if (progress < 1) {
+        requestAnimationFrame(updateCounter);
+      } else {
+        setDisplayAmount(targetVal);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      requestAnimationFrame(updateCounter);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [amount]);
+
   const formatINR = (val: number) => {
     const safeVal = Number.isFinite(val) ? val : 0;
     return new Intl.NumberFormat('en-IN', {
@@ -44,8 +76,8 @@ export const StatCard: React.FC<StatCardProps> = ({
       </div>
 
       <div className="flex items-baseline justify-between mt-1 sm:mt-2 gap-1 flex-wrap">
-        <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white truncate">
-          {formatINR(amount)}
+        <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white truncate font-mono">
+          {formatINR(displayAmount)}
         </h3>
         {badge && (
           <span className="text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">

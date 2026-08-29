@@ -117,6 +117,15 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     }
   };
 
+  const handleRunnerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isMoving) return;
+    setIsMoving(true);
+    setTimeout(() => {
+      setIsMoving(false);
+    }, 1200);
+  };
+
   return (
     <div 
       onClick={onBarClick}
@@ -168,16 +177,29 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         {/* Animated Ganesha + Mooshika Mouse Runner Icon */}
         {showMooshika && (
           <div
-            className="absolute top-0 -translate-x-1/2 flex flex-col items-center transition-all duration-[2400ms] cubic-bezier(0.25,1,0.5,1) z-10 pointer-events-none"
+            className="absolute top-0 -translate-x-1/2 flex flex-col items-center transition-all duration-[2400ms] cubic-bezier(0.25,1,0.5,1) z-10"
             style={{ left: `${runnerLeftPos}%` }}
           >
-            <div className={`w-14 h-14 sm:w-20 sm:h-20 select-none transition-transform duration-300 ${
-              isMoving 
-                ? 'mooshika-runner-anim' 
-                : safePercentage >= 100 
-                  ? 'victory-pulse' 
-                  : ''
-            }`}>
+            {/* Golden Sparkle Trail behind Mooshika while running */}
+            {isMoving && (
+              <div className="absolute left-1 bottom-4 pointer-events-none z-0">
+                <span className="absolute -left-2 -bottom-1 text-amber-300 text-xs sparkle-trail-1">✨</span>
+                <span className="absolute -left-5 bottom-1 text-yellow-200 text-[10px] sparkle-trail-2">⭐</span>
+                <span className="absolute -left-3 bottom-3 text-amber-400 text-[9px] sparkle-trail-3">✨</span>
+              </div>
+            )}
+
+            <div
+              onClick={handleRunnerClick}
+              title="Tap Lord Ganesha on Mooshika Vahana to run! 🪔"
+              className={`w-14 h-14 sm:w-20 sm:h-20 select-none transition-transform duration-300 cursor-pointer active:scale-95 z-10 ${
+                isMoving 
+                  ? 'mooshika-runner-anim' 
+                  : safePercentage >= 100 
+                    ? 'victory-pulse hover:scale-105' 
+                    : 'hover:scale-105'
+              }`}
+            >
               <img
                 src="/progressBar.png"
                 alt="Lord Ganesha riding Mooshika Mouse"
@@ -185,7 +207,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
               />
             </div>
             {/* Leading Edge Glow Pin */}
-            <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_15px_#ffb703] -mt-1" />
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_15px_#ffb703] -mt-1 pointer-events-none" />
           </div>
         )}
 
