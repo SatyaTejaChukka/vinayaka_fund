@@ -175,6 +175,23 @@
   animation: sparkleEmit 0.65s 0.44s ease-out infinite;
 }
 
+/* Fluid Tab Fade-and-Slide Transition */
+@keyframes tabFadeSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-fade-slide {
+  animation: tabFadeSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
 /* Custom Festive Dropdown & Select Styling */
 select {
   background-color: rgba(15, 23, 42, 0.95);

@@ -649,7 +649,7 @@ export const PublicFund: React.FC = () => {
 
           {/* Academic Year Filter Pills (For Donations Tab) */}
           {activeTab === 'donations' && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+            <div key="donations-year-filter" className="tab-fade-slide flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
               <div className="flex items-center gap-1 text-xs text-amber-300 font-bold shrink-0 mr-1">
                 <GraduationCap className="w-4 h-4" />
                 <span className="hidden sm:inline">Filter Batch:</span>
@@ -675,7 +675,7 @@ export const PublicFund: React.FC = () => {
 
           {/* Search by Donor Name & Sort Controls */}
           {activeTab === 'donations' && (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+            <div key="donations-search-bar" className="tab-fade-slide flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
               {/* Live Search Input */}
               <div className="relative flex-1">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -726,7 +726,7 @@ export const PublicFund: React.FC = () => {
 
           {/* Donations Tab View */}
           {activeTab === 'donations' && (
-            <div className="space-y-4">
+            <div key="donations-tab-view" className="tab-fade-slide space-y-4">
               {sortedDonations.length === 0 ? (
                 <EmptyState
                   icon={Filter}
@@ -851,7 +851,7 @@ export const PublicFund: React.FC = () => {
 
           {/* Expenses Tab View */}
           {activeTab === 'expenses' && (
-            <div className="space-y-4">
+            <div key="expenses-tab-view" className="tab-fade-slide space-y-4">
               {expenses.length === 0 ? (
                 <EmptyState
                   icon={Wallet}
