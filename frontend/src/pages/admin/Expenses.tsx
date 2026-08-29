@@ -372,7 +372,7 @@ export const AdminExpenses: React.FC = () => {
                 <select
                   value={expForm.status}
                   onChange={(e) => setExpForm({ ...expForm, status: e.target.value as 'SPENT' | 'PENDING' })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 pr-8 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 custom-select cursor-pointer transition-all"
                 >
                   <option value="SPENT">SPENT (Payment Completed)</option>
                   <option value="PENDING">PENDING (Planned / Committed)</option>

@@ -565,7 +565,7 @@ export const AdminEventSchedule: React.FC = () => {
                   <select
                     value={eventForm.category}
                     onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
+                    className="w-full px-3.5 pr-8 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 custom-select cursor-pointer transition-all"
                   >
                     <option value="POOJA">🪔 Pooja & Aarti</option>
                     <option value="RANGOLI">🎨 Rangoli Event</option>

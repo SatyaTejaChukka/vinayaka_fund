@@ -713,7 +713,7 @@ export const PublicFund: React.FC = () => {
                       setSortBy(e.target.value as any);
                       setCurrentPage(1);
                     }}
-                    className="w-full sm:w-auto pl-8 pr-7 py-2 sm:py-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-white text-xs font-semibold focus:outline-none focus:border-amber-400 appearance-none cursor-pointer"
+                    className="w-full sm:w-auto pl-8.5 pr-8 py-2 sm:py-2.5 rounded-xl bg-slate-900/90 border border-amber-500/30 text-amber-200 text-xs font-bold focus:outline-none focus:border-amber-400 custom-select cursor-pointer shadow-sm hover:border-amber-500/50 transition-all"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>

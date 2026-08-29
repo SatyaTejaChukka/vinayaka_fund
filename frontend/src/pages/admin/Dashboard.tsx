@@ -487,7 +487,7 @@ export const AdminDashboard: React.FC = () => {
                 <select
                   value={donForm.student_year}
                   onChange={(e) => setDonForm({ ...donForm, student_year: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 pr-8 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 custom-select cursor-pointer transition-all"
                 >
                   <option value="">Select Studying Year (Optional)</option>
                   <option value="1st Year (I)">1st Year (I)</option>
@@ -612,7 +612,7 @@ export const AdminDashboard: React.FC = () => {
                 <select
                   value={expForm.status}
                   onChange={(e) => setExpForm({ ...expForm, status: e.target.value as 'SPENT' | 'PENDING' })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400"
+                  className="w-full px-3.5 pr-8 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 custom-select cursor-pointer transition-all"
                 >
                   <option value="SPENT">SPENT (Payment Completed)</option>
                   <option value="PENDING">PENDING (Planned / Committed)</option>

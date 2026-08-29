@@ -45,7 +45,7 @@
 
 .festive-glass {
   background-color: rgba(19, 13, 31, 0.72);
-  background: rgba(19, 13, 31, 0.72); /* elements color */
+  background: rgba(19, 13, 31, 0.72);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 183, 3, 0.25);
@@ -145,4 +145,50 @@
 
 .victory-pulse {
   animation: victoryGlow 2s infinite ease-in-out;
+}
+
+/* Custom Festive Dropdown & Select Styling */
+select {
+  background-color: rgba(15, 23, 42, 0.95);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 183, 3, 0.3);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+select:hover {
+  border-color: rgba(255, 183, 3, 0.55);
+  background-color: rgba(30, 41, 59, 0.98);
+}
+
+select:focus {
+  outline: none;
+  border-color: #ffb703;
+  box-shadow: 0 0 0 2px rgba(255, 183, 3, 0.25), 0 0 15px rgba(255, 183, 3, 0.15);
+}
+
+select option {
+  background-color: #0f172a;
+  color: #f8fafc;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: #1e293b;
+  color: #ffb703;
+}
+
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffb703' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
 }

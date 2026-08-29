@@ -200,12 +200,12 @@ export const AdminDonations: React.FC = () => {
           </div>
 
           {/* Student Academic Year Dropdown */}
-          <div className="relative w-full sm:w-52">
-            <GraduationCap className="w-4 h-4 text-amber-400 absolute left-3.5 top-3 pointer-events-none" />
+          <div className="relative w-full sm:w-56">
+            <GraduationCap className="w-4 h-4 text-amber-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              className="w-full pl-10 pr-8 py-2 rounded-xl bg-slate-900/90 border border-slate-700 text-amber-300 text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer appearance-none"
+              className="w-full pl-10 pr-8 py-2 rounded-xl bg-slate-900/90 border border-amber-500/30 text-amber-200 text-xs font-bold focus:outline-none focus:border-amber-400 custom-select cursor-pointer shadow-sm hover:border-amber-500/50 transition-all"
             >
               {ACADEMIC_YEARS.map((y) => (
                 <option key={y} value={y} className="bg-slate-900 text-white font-medium">

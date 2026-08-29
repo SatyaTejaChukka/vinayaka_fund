@@ -37,14 +37,19 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 
   const [animatedPercentage, setAnimatedPercentage] = useState<number>(0);
   const [displayPercentage, setDisplayPercentage] = useState<number>(0);
+  const [isMoving, setIsMoving] = useState<boolean>(false);
 
   useEffect(() => {
     // Reset to 0% and start realistic running journey after 300ms delay
     setAnimatedPercentage(0);
     setDisplayPercentage(0);
+    setIsMoving(false);
 
     const startTimer = setTimeout(() => {
       setAnimatedPercentage(safePercentage);
+      if (safePercentage > 0) {
+        setIsMoving(true);
+      }
 
       // Synchronize percentage counter numbers in real-time as Ganesha runs over 2400ms
       const duration = 2400;
@@ -62,6 +67,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           requestAnimationFrame(updateCounter);
         } else {
           setDisplayPercentage(safePercentage);
+          setIsMoving(false); // Stop running animation once target is reached!
         }
       };
 
@@ -165,7 +171,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
             className="absolute top-0 -translate-x-1/2 flex flex-col items-center transition-all duration-[2400ms] cubic-bezier(0.25,1,0.5,1) z-10 pointer-events-none"
             style={{ left: `${runnerLeftPos}%` }}
           >
-            <div className="w-14 h-14 sm:w-20 sm:h-20 mooshika-runner-anim victory-pulse select-none">
+            <div className={`w-14 h-14 sm:w-20 sm:h-20 select-none transition-transform duration-300 ${
+              isMoving 
+                ? 'mooshika-runner-anim' 
+                : safePercentage >= 100 
+                  ? 'victory-pulse' 
+                  : ''
+            }`}>
               <img
                 src="/progressBar.png"
                 alt="Lord Ganesha riding Mooshika Mouse"
