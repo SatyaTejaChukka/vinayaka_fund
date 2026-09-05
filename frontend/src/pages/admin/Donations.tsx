@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, RefreshCw, CheckCircle2, XCircle, Download, Filter, GraduationCap, Eye, EyeOff } from 'lucide-react';
+import { Search, RefreshCw, CheckCircle2, XCircle, Download, Filter, GraduationCap, Eye, EyeOff, X } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { TableSkeleton } from '../../components/LoadingSkeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -32,6 +32,7 @@ export const AdminDonations: React.FC = () => {
   // Void Modal State
   const [voidingId, setVoidingId] = useState<number | null>(null);
   const [voidReason, setVoidReason] = useState<string>('');
+  const [selectedDonation, setSelectedDonation] = useState<AdminDonation | null>(null);
 
   const loadDonations = async () => {
     try {
@@ -295,7 +296,19 @@ export const AdminDonations: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-slate-200">
                 {filteredDonations.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-900/40 transition">
+                  <tr
+                    key={d.id}
+                    onClick={() => setSelectedDonation(d)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedDonation(d);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    title="Click to view transaction details"
+                    className="hover:bg-slate-900/40 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-amber-400/70">
                     <td className="p-4">
                       <div className="font-bold text-white text-sm">{d.donor_name}</div>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -327,7 +340,10 @@ export const AdminDonations: React.FC = () => {
 
                     <td className="p-4">
                       <button
-                        onClick={() => handleToggleVisibility(d.id, d.show_donor_name)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleVisibility(d.id, d.show_donor_name);
+                        }}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition border active:scale-95 ${
                           d.show_donor_name
                             ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25 shadow-sm'
@@ -371,14 +387,20 @@ export const AdminDonations: React.FC = () => {
                       {d.status === 'PENDING' && (
                         <div className="inline-flex items-center gap-1.5 justify-end">
                           <button
-                            onClick={() => handleVerify(d.id)}
+                            onClick={(e) => {
+                             e.stopPropagation();
+                             handleVerify(d.id);
+                           }}
                             className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 text-slate-950 font-extrabold hover:brightness-110 active:scale-95 transition text-xs shadow-sm flex items-center gap-1"
                           >
                             <CheckCircle2 className="w-3.5 h-3.5 text-slate-950 shrink-0" />
                             <span>Verify</span>
                           </button>
                           <button
-                            onClick={() => handleReject(d.id)}
+                            onClick={(e) => {
+                             e.stopPropagation();
+                             handleReject(d.id);
+                           }}
                             className="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40 hover:bg-rose-500/30 active:scale-95 transition text-xs flex items-center gap-1"
                           >
                             <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
@@ -389,7 +411,10 @@ export const AdminDonations: React.FC = () => {
 
                       {d.status === 'VERIFIED' && (
                         <button
-                          onClick={() => setVoidingId(d.id)}
+                          onClick={(e) => {
+                           e.stopPropagation();
+                           setVoidingId(d.id);
+                         }}
                           className="px-3 py-1.5 rounded-lg bg-slate-800 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 border border-slate-700 active:scale-95 transition text-xs font-bold"
                         >
                           Void Transaction
@@ -409,6 +434,116 @@ export const AdminDonations: React.FC = () => {
           </div>
         )}
       </div>
+
+
+      {/* Transaction Details Modal */}
+      {selectedDonation && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+          onClick={() => setSelectedDonation(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="transaction-details-title"
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto festive-glass rounded-3xl border border-amber-500/30 p-6 text-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-amber-500/20">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-amber-300 font-extrabold">Transaction details</p>
+                <h3 id="transaction-details-title" className="text-xl font-extrabold text-white mt-1">
+                  Donation #\${selectedDonation.id}
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">Click outside this window or use the close button to return to the register.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDonation(null)}
+                className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-rose-500/20 hover:text-white border border-slate-700 transition"
+                aria-label="Close transaction details"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Donor name</p>
+                <p className="text-base font-extrabold text-white mt-1">\${selectedDonation.donor_name}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Amount</p>
+                <p className="text-lg font-extrabold text-amber-400 mt-1">\${formatINR(selectedDonation.amount)}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Payment method</p>
+                <p className="text-sm font-bold text-white mt-1">
+                  {selectedDonation.payment_method === 'CASH' || selectedDonation.upi_transaction_id?.startsWith('CASH-') ? 'Cash donation' : 'UPI payment'}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                  {selectedDonation.payment_method === 'CASH' || selectedDonation.upi_transaction_id?.startsWith('CASH-') ? 'Cash receipt / reference ID' : 'UPI transaction reference ID'}
+                </p>
+                <p className="text-sm font-mono text-amber-200 mt-1 break-all">\${selectedDonation.upi_transaction_id || 'Not provided'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Donation date</p>
+                <p className="text-sm font-bold text-white mt-1">\${selectedDonation.donation_date}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Student year / role</p>
+                <p className="text-sm font-bold text-white mt-1">\${selectedDonation.student_year || 'Not provided'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                  {selectedDonation.payment_method === 'CASH' || selectedDonation.upi_transaction_id?.startsWith('CASH-') ? 'Cash handover / donor note' : 'Donor note'}
+                </p>
+                <p className="text-sm text-slate-200 mt-1 whitespace-pre-wrap">\${selectedDonation.description || 'No note provided'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status</p>
+                <p className="text-sm font-extrabold text-emerald-300 mt-1">\${selectedDonation.status}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Portal visibility</p>
+                <p className="text-sm font-bold text-white mt-1">\${selectedDonation.show_donor_name ? 'Donor name shown' : 'Anonymous on portal'}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Submitted at</p>
+                <p className="text-sm text-slate-200 mt-1">\${new Date(selectedDonation.created_at).toLocaleString('en-IN')}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Last updated</p>
+                <p className="text-sm text-slate-200 mt-1">\${new Date(selectedDonation.updated_at).toLocaleString('en-IN')}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Verification</p>
+                <p className="text-sm text-slate-200 mt-1">
+                  {selectedDonation.verified_at ? 'Verified on ' + new Date(selectedDonation.verified_at).toLocaleString('en-IN') + (selectedDonation.verified_by ? ' by admin #' + selectedDonation.verified_by : '') : 'Not verified'}
+                </p>
+              </div>
+              {selectedDonation.void_reason && (
+                <div className="rounded-2xl bg-rose-500/10 border border-rose-500/30 p-4 sm:col-span-2">
+                  <p className="text-[10px] uppercase tracking-wider text-rose-300 font-bold">Void reason</p>
+                  <p className="text-sm text-rose-100 mt-1">\${selectedDonation.void_reason}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end mt-6 pt-4 border-t border-amber-500/20">
+              <button
+                type="button"
+                onClick={() => setSelectedDonation(null)}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 text-sm font-bold transition"
+              >
+                Close details
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mandatory Void Reason Modal */}
       {voidingId && (
