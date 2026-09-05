@@ -180,6 +180,9 @@ export const AdminDonations: React.FC = () => {
     }).format(val);
   };
 
+  const isCashDonation = selectedDonation?.payment_method === 'CASH' || selectedDonation?.upi_transaction_id?.startsWith('CASH-');
+  const cashHandoverPerson = selectedDonation?.description?.match(/^Direct Cash Handover \((.+)\)$/)?.[1]?.trim();
+
   return (
     <AdminLayout title="Donation Register & Verification">
       
@@ -453,7 +456,7 @@ export const AdminDonations: React.FC = () => {
               <div>
                 <p className="text-[10px] uppercase tracking-[0.2em] text-amber-300 font-extrabold">Transaction details</p>
                 <h3 id="transaction-details-title" className="text-xl font-extrabold text-white mt-1">
-                  Donation #\${selectedDonation.id}
+                  Donation #${selectedDonation.id}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">Click outside this window or use the close button to return to the register.</p>
               </div>
@@ -470,53 +473,59 @@ export const AdminDonations: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Donor name</p>
-                <p className="text-base font-extrabold text-white mt-1">\${selectedDonation.donor_name}</p>
+                <p className="text-base font-extrabold text-white mt-1">${selectedDonation.donor_name}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Amount</p>
-                <p className="text-lg font-extrabold text-amber-400 mt-1">\${formatINR(selectedDonation.amount)}</p>
+                <p className="text-lg font-extrabold text-amber-400 mt-1">${formatINR(selectedDonation.amount)}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Payment method</p>
                 <p className="text-sm font-bold text-white mt-1">
-                  {selectedDonation.payment_method === 'CASH' || selectedDonation.upi_transaction_id?.startsWith('CASH-') ? 'Cash donation' : 'UPI payment'}
+                  {isCashDonation ? 'Cash donation' : 'UPI payment'}
                 </p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                  {selectedDonation.payment_method === 'CASH' || selectedDonation.upi_transaction_id?.startsWith('CASH-') ? 'Cash receipt / reference ID' : 'UPI transaction reference ID'}
+                  {isCashDonation ? 'Cash receipt / reference ID' : 'UPI transaction reference ID'}
                 </p>
-                <p className="text-sm font-mono text-amber-200 mt-1 break-all">\${selectedDonation.upi_transaction_id || 'Not provided'}</p>
+                <p className="text-sm font-mono text-amber-200 mt-1 break-all">${selectedDonation.upi_transaction_id || 'Not provided'}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Donation date</p>
-                <p className="text-sm font-bold text-white mt-1">\${selectedDonation.donation_date}</p>
+                <p className="text-sm font-bold text-white mt-1">${selectedDonation.donation_date}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Student year / role</p>
-                <p className="text-sm font-bold text-white mt-1">\${selectedDonation.student_year || 'Not provided'}</p>
+                <p className="text-sm font-bold text-white mt-1">${selectedDonation.student_year || 'Not provided'}</p>
               </div>
+              {isCashDonation && (
+                <div className="rounded-2xl bg-slate-900/70 border border-emerald-500/20 p-4 sm:col-span-2">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Cash handed over to</p>
+                  <p className="text-sm font-bold text-emerald-200 mt-1">{cashHandoverPerson || 'Not provided'}</p>
+                </div>
+              )}
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-                  {selectedDonation.payment_method === 'CASH' || selectedDonation.upi_transaction_id?.startsWith('CASH-') ? 'Cash handover / donor note' : 'Donor note'}
+                  {isCashDonation ? 'Cash handover / donor note' : 'Donor note'}
                 </p>
-                <p className="text-sm text-slate-200 mt-1 whitespace-pre-wrap">\${selectedDonation.description || 'No note provided'}</p>
+                <p className="text-sm text-slate-200 mt-1 whitespace-pre-wrap">${selectedDonation.description || 'No note provided'}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status</p>
-                <p className="text-sm font-extrabold text-emerald-300 mt-1">\${selectedDonation.status}</p>
+                <p className="text-sm font-extrabold text-emerald-300 mt-1">${selectedDonation.status}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Portal visibility</p>
-                <p className="text-sm font-bold text-white mt-1">\${selectedDonation.show_donor_name ? 'Donor name shown' : 'Anonymous on portal'}</p>
+                <p className="text-sm font-bold text-white mt-1">${selectedDonation.show_donor_name ? 'Donor name shown' : 'Anonymous on portal'}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Submitted at</p>
-                <p className="text-sm text-slate-200 mt-1">\${new Date(selectedDonation.created_at).toLocaleString('en-IN')}</p>
+                <p className="text-sm text-slate-200 mt-1">${new Date(selectedDonation.created_at).toLocaleString('en-IN')}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Last updated</p>
-                <p className="text-sm text-slate-200 mt-1">\${new Date(selectedDonation.updated_at).toLocaleString('en-IN')}</p>
+                <p className="text-sm text-slate-200 mt-1">${new Date(selectedDonation.updated_at).toLocaleString('en-IN')}</p>
               </div>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Verification</p>
@@ -527,7 +536,7 @@ export const AdminDonations: React.FC = () => {
               {selectedDonation.void_reason && (
                 <div className="rounded-2xl bg-rose-500/10 border border-rose-500/30 p-4 sm:col-span-2">
                   <p className="text-[10px] uppercase tracking-wider text-rose-300 font-bold">Void reason</p>
-                  <p className="text-sm text-rose-100 mt-1">\${selectedDonation.void_reason}</p>
+                  <p className="text-sm text-rose-100 mt-1">${selectedDonation.void_reason}</p>
                 </div>
               )}
             </div>
