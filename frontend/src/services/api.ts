@@ -145,6 +145,21 @@ export const adminApi = {
     const res = await api.patch(`/api/admin/donations/${donationId}/visibility`, { show_donor_name: showDonorName });
     return res.data;
   },
+  updateDonation: async (donationId: number, data: {
+    donor_name: string;
+    amount: number;
+    donation_date: string;
+    payment_method: string;
+    upi_transaction_id?: string | null;
+    description?: string | null;
+    status: AdminDonation['status'];
+    show_donor_name: boolean;
+    student_year?: string | null;
+    void_reason?: string | null;
+  }): Promise<AdminDonation> => {
+    const res = await api.put(`/api/admin/donations/${donationId}`, data);
+    return res.data;
+  },
   getAdminExpenses: async (fundId: number, status?: string): Promise<AdminExpense[]> => {
     const url = `/api/admin/funds/${fundId}/expenses` + (status ? `?status=${status}` : '');
     const res = await api.get(url);

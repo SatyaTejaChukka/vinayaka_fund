@@ -72,16 +72,16 @@ export interface AdminDonation {
   amount: number;
   donation_date: string;
   payment_method: string;
-  upi_transaction_id?: string;
-  description?: string;
+  upi_transaction_id?: string | null;
+  description?: string | null;
   status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'VOIDED';
   show_donor_name: boolean;
-  student_year?: string;
+  student_year?: string | null;
   created_at: string;
   updated_at: string;
   verified_at?: string;
   verified_by?: number;
-  void_reason?: string;
+  void_reason?: string | null;
 }
 
 export interface PublicExpense {

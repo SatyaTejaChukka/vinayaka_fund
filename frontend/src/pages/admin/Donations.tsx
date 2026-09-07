@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, RefreshCw, CheckCircle2, XCircle, Download, Filter, GraduationCap, Eye, EyeOff, X } from 'lucide-react';
+import { Search, RefreshCw, CheckCircle2, XCircle, Download, Filter, GraduationCap, Eye, EyeOff, X, Pencil, Save } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { TableSkeleton } from '../../components/LoadingSkeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -18,6 +18,32 @@ const ACADEMIC_YEARS = [
   'Other / General'
 ];
 
+type DonationEditForm = {
+  donor_name: string;
+  student_year: string;
+  amount: string;
+  payment_method: string;
+  upi_transaction_id: string;
+  donation_date: string;
+  description: string;
+  status: AdminDonation['status'];
+  show_donor_name: boolean;
+  void_reason: string;
+};
+
+const toDonationEditForm = (donation: AdminDonation): DonationEditForm => ({
+  donor_name: donation.donor_name,
+  student_year: donation.student_year || '',
+  amount: String(donation.amount),
+  payment_method: donation.payment_method || 'UPI',
+  upi_transaction_id: donation.upi_transaction_id || '',
+  donation_date: donation.donation_date,
+  description: donation.description || '',
+  status: donation.status,
+  show_donor_name: donation.show_donor_name,
+  void_reason: donation.void_reason || '',
+});
+
 export const AdminDonations: React.FC = () => {
   const toast = useToast();
   const { confirm } = useConfirm();
@@ -33,6 +59,9 @@ export const AdminDonations: React.FC = () => {
   const [voidingId, setVoidingId] = useState<number | null>(null);
   const [voidReason, setVoidReason] = useState<string>('');
   const [selectedDonation, setSelectedDonation] = useState<AdminDonation | null>(null);
+  const [isEditingDonation, setIsEditingDonation] = useState<boolean>(false);
+  const [savingDonation, setSavingDonation] = useState<boolean>(false);
+  const [editForm, setEditForm] = useState<DonationEditForm | null>(null);
 
   const loadDonations = async () => {
     try {
@@ -119,6 +148,61 @@ export const AdminDonations: React.FC = () => {
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || 'Failed to update visibility.');
       loadDonations();
+    }
+  };
+
+  const openDonationDetails = (donation: AdminDonation) => {
+    setSelectedDonation(donation);
+    setEditForm(toDonationEditForm(donation));
+    setIsEditingDonation(false);
+  };
+
+  const closeDonationDetails = () => {
+    setSelectedDonation(null);
+    setEditForm(null);
+    setIsEditingDonation(false);
+  };
+
+  const handleSaveDonation = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedDonation || !editForm) return;
+
+    const amount = Number(editForm.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Enter a valid donation amount greater than zero.');
+      return;
+    }
+
+    if (editForm.status === 'VOIDED' && !editForm.void_reason.trim()) {
+      toast.error('A void reason is required for a voided transaction.');
+      return;
+    }
+
+    try {
+      setSavingDonation(true);
+      const updatedDonation = await adminApi.updateDonation(selectedDonation.id, {
+        donor_name: editForm.donor_name.trim(),
+        amount,
+        donation_date: editForm.donation_date,
+        payment_method: editForm.payment_method,
+        upi_transaction_id: editForm.upi_transaction_id.trim() || null,
+        description: editForm.description.trim() || null,
+        status: editForm.status,
+        show_donor_name: editForm.show_donor_name,
+        student_year: editForm.student_year || null,
+        void_reason: editForm.void_reason.trim() || null,
+      });
+      setDonations((previous) =>
+        previous.map((donation) => donation.id === updatedDonation.id ? updatedDonation : donation)
+      );
+      setSelectedDonation(updatedDonation);
+      setEditForm(toDonationEditForm(updatedDonation));
+      setIsEditingDonation(false);
+      toast.success(`Transaction #${updatedDonation.id} updated successfully.`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to update transaction.');
+    } finally {
+      setSavingDonation(false);
     }
   };
 
@@ -301,11 +385,11 @@ export const AdminDonations: React.FC = () => {
                 {filteredDonations.map((d) => (
                   <tr
                     key={d.id}
-                    onClick={() => setSelectedDonation(d)}
+                     onClick={() => openDonationDetails(d)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        setSelectedDonation(d);
+                         openDonationDetails(d);
                       }
                     }}
                     role="button"
@@ -443,7 +527,7 @@ export const AdminDonations: React.FC = () => {
       {selectedDonation && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
-          onClick={() => setSelectedDonation(null)}
+           onClick={closeDonationDetails}
         >
           <div
             role="dialog"
@@ -462,7 +546,7 @@ export const AdminDonations: React.FC = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedDonation(null)}
+                 onClick={closeDonationDetails}
                 className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-rose-500/20 hover:text-white border border-slate-700 transition"
                 aria-label="Close transaction details"
               >
@@ -470,7 +554,165 @@ export const AdminDonations: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+             {isEditingDonation && editForm && (
+               <form onSubmit={handleSaveDonation} className="mt-5 space-y-4">
+                 <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4">
+                   <p className="text-xs text-amber-200">
+                     Update the transaction details below. Changes are saved to the register and recorded in the audit trail.
+                   </p>
+                 </div>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   <div className="sm:col-span-2">
+                     <label htmlFor="edit-donor-name" className="text-xs font-bold text-slate-300 block mb-1">Donor name *</label>
+                     <input
+                       id="edit-donor-name"
+                       type="text"
+                       required
+                       value={editForm.donor_name}
+                       onChange={(event) => setEditForm({ ...editForm, donor_name: event.target.value })}
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
+                     />
+                   </div>
+                   <div>
+                     <label htmlFor="edit-student-year" className="text-xs font-bold text-slate-300 block mb-1">Academic year / role</label>
+                     <select
+                       id="edit-student-year"
+                       value={editForm.student_year}
+                       onChange={(event) => setEditForm({ ...editForm, student_year: event.target.value })}
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400 custom-select"
+                     >
+                       <option value="">Not provided</option>
+                       <option value="1st Year (I)">1st Year (I)</option>
+                       <option value="2nd Year (II)">2nd Year (II)</option>
+                       <option value="3rd Year (III)">3rd Year (III)</option>
+                       <option value="4th Year (IV)">4th Year (IV)</option>
+                       <option value="Faculty">Faculty</option>
+                       <option value="Alumni">Alumni</option>
+                       <option value="General Public">General Public</option>
+                       <option value="Other / General">Other / General</option>
+                     </select>
+                   </div>
+                   <div>
+                     <label htmlFor="edit-amount" className="text-xs font-bold text-slate-300 block mb-1">Amount (₹) *</label>
+                     <input
+                       id="edit-amount"
+                       type="number"
+                       required
+                       min="0.01"
+                       step="0.01"
+                       value={editForm.amount}
+                       onChange={(event) => setEditForm({ ...editForm, amount: event.target.value })}
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-400"
+                     />
+                   </div>
+                   <div>
+                     <label htmlFor="edit-payment-method" className="text-xs font-bold text-slate-300 block mb-1">Payment method *</label>
+                     <select
+                       id="edit-payment-method"
+                       value={editForm.payment_method}
+                       onChange={(event) => setEditForm({ ...editForm, payment_method: event.target.value })}
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400 custom-select"
+                     >
+                       <option value="UPI">UPI</option>
+                       <option value="CASH">Cash</option>
+                     </select>
+                   </div>
+                   <div>
+                     <label htmlFor="edit-donation-date" className="text-xs font-bold text-slate-300 block mb-1">Donation date *</label>
+                     <input
+                       id="edit-donation-date"
+                       type="date"
+                       required
+                       value={editForm.donation_date}
+                       onChange={(event) => setEditForm({ ...editForm, donation_date: event.target.value })}
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
+                     />
+                   </div>
+                   <div className="sm:col-span-2">
+                     <label htmlFor="edit-reference" className="text-xs font-bold text-slate-300 block mb-1">Payment / receipt reference</label>
+                     <input
+                       id="edit-reference"
+                       type="text"
+                       value={editForm.upi_transaction_id}
+                       onChange={(event) => setEditForm({ ...editForm, upi_transaction_id: event.target.value })}
+                       placeholder="UPI reference or cash receipt number"
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono text-white focus:outline-none focus:border-amber-400"
+                     />
+                   </div>
+                   <div>
+                     <label htmlFor="edit-status" className="text-xs font-bold text-slate-300 block mb-1">Status *</label>
+                     <select
+                       id="edit-status"
+                       value={editForm.status}
+                       onChange={(event) => setEditForm({ ...editForm, status: event.target.value as AdminDonation['status'] })}
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400 custom-select"
+                     >
+                       <option value="PENDING">Pending</option>
+                       <option value="VERIFIED">Verified</option>
+                       <option value="REJECTED">Rejected</option>
+                       <option value="VOIDED">Voided</option>
+                     </select>
+                   </div>
+                   <div className="flex items-end pb-1">
+                     <label className="inline-flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
+                       <input
+                         type="checkbox"
+                         checked={editForm.show_donor_name}
+                         onChange={(event) => setEditForm({ ...editForm, show_donor_name: event.target.checked })}
+                         className="h-4 w-4 accent-amber-400"
+                       />
+                       Show donor name on public portal
+                     </label>
+                   </div>
+                   {editForm.status === 'VOIDED' && (
+                     <div className="sm:col-span-2">
+                       <label htmlFor="edit-void-reason" className="text-xs font-bold text-slate-300 block mb-1">Void reason *</label>
+                       <input
+                         id="edit-void-reason"
+                         type="text"
+                         required
+                         value={editForm.void_reason}
+                         onChange={(event) => setEditForm({ ...editForm, void_reason: event.target.value })}
+                         className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-rose-400"
+                       />
+                     </div>
+                   )}
+                   <div className="sm:col-span-2">
+                     <label htmlFor="edit-description" className="text-xs font-bold text-slate-300 block mb-1">Donor note / description</label>
+                     <textarea
+                       id="edit-description"
+                       rows={3}
+                       value={editForm.description}
+                       onChange={(event) => setEditForm({ ...editForm, description: event.target.value })}
+                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400 resize-y"
+                     />
+                   </div>
+                 </div>
+                 <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t border-amber-500/20">
+                   <button
+                     type="button"
+                     onClick={() => {
+                       setEditForm(toDonationEditForm(selectedDonation));
+                       setIsEditingDonation(false);
+                     }}
+                     disabled={savingDonation}
+                     className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 text-sm font-bold transition disabled:opacity-50"
+                   >
+                     Cancel
+                   </button>
+                   <button
+                     type="submit"
+                     disabled={savingDonation}
+                     className="px-4 py-2.5 rounded-xl gold-button text-amber-950 text-sm font-extrabold transition flex items-center justify-center gap-2 disabled:opacity-50"
+                   >
+                     <Save className="w-4 h-4" />
+                     {savingDonation ? 'Saving...' : 'Save changes'}
+                   </button>
+                 </div>
+               </form>
+             )}
+
+             <div className={`${isEditingDonation ? 'hidden ' : ''}grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5`}>
               <div className="rounded-2xl bg-slate-900/70 border border-slate-700/80 p-4 sm:col-span-2">
                 <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Donor name</p>
                 <p className="text-base font-extrabold text-white mt-1">{selectedDonation.donor_name}</p>
@@ -541,13 +783,26 @@ export const AdminDonations: React.FC = () => {
               )}
             </div>
 
-            <div className="flex justify-end mt-6 pt-4 border-t border-amber-500/20">
+             <div className="flex justify-end items-center gap-2 mt-6 pt-4 border-t border-amber-500/20">
+               {!isEditingDonation && (
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setEditForm(toDonationEditForm(selectedDonation));
+                     setIsEditingDonation(true);
+                   }}
+                   className="mr-auto px-4 py-2.5 rounded-xl bg-amber-500/20 text-amber-200 hover:bg-amber-500/30 border border-amber-500/40 text-sm font-bold transition flex items-center gap-2"
+                 >
+                   <Pencil className="w-4 h-4" />
+                   Edit transaction
+                 </button>
+               )}
               <button
                 type="button"
-                onClick={() => setSelectedDonation(null)}
+                 onClick={closeDonationDetails}
                 className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 text-sm font-bold transition"
               >
-                Close details
+                 {isEditingDonation ? 'Close' : 'Close details'}
               </button>
             </div>
           </div>

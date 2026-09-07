@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.models.fund import Fund
 from app.models.donation import Donation
 from app.models.user import User
-from app.schemas.donation import DonationAdminCreate, DonationVoidRequest, DonationVisibilityUpdate, AdminDonationResponse
+from app.schemas.donation import DonationAdminCreate, DonationAdminUpdate, DonationVoidRequest, DonationVisibilityUpdate, AdminDonationResponse
 from app.dependencies.auth import get_current_admin
 from app.services.audit_service import log_action
 
@@ -30,6 +30,21 @@ def get_owned_donation(db: Session, donation_id: int, current_admin: User) -> Do
     if not donation:
         raise HTTPException(status_code=404, detail="Donation not found")
     return donation
+
+
+def editable_donation_state(donation: Donation) -> dict:
+    return {
+        "donor_name": donation.donor_name,
+        "amount": donation.amount,
+        "donation_date": donation.donation_date.isoformat(),
+        "payment_method": donation.payment_method,
+        "upi_transaction_id": donation.upi_transaction_id,
+        "description": donation.description,
+        "status": donation.status,
+        "show_donor_name": donation.show_donor_name,
+        "student_year": donation.student_year,
+        "void_reason": donation.void_reason,
+    }
 
 
 @router.get("/api/admin/funds/{fund_id}/donations", response_model=List[AdminDonationResponse])
@@ -154,6 +169,55 @@ def toggle_donation_visibility(
         user_id=current_admin.id,
         old_data={"show_donor_name": old_visibility},
         new_data={"show_donor_name": donation.show_donor_name}
+    )
+    return donation
+
+
+@router.put("/api/admin/donations/{donation_id}", response_model=AdminDonationResponse)
+def update_donation(
+    donation_id: int,
+    donation_in: DonationAdminUpdate,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin)
+):
+    donation = get_owned_donation(db, donation_id, current_admin)
+    old_data = editable_donation_state(donation)
+    next_status = donation_in.status.upper()
+    next_void_reason = (donation_in.void_reason or "").strip() or None
+
+    if next_status == "VOIDED" and not next_void_reason:
+        raise HTTPException(status_code=400, detail="A void reason is required for voided donations.")
+
+    donation.donor_name = donation_in.donor_name.strip()
+    donation.amount = donation_in.amount
+    donation.donation_date = donation_in.donation_date
+    donation.payment_method = donation_in.payment_method.strip().upper()
+    donation.upi_transaction_id = (donation_in.upi_transaction_id or "").strip() or None
+    donation.description = (donation_in.description or "").strip() or None
+    donation.status = next_status
+    donation.show_donor_name = donation_in.show_donor_name
+    donation.student_year = (donation_in.student_year or "").strip() or None
+    donation.void_reason = next_void_reason if next_status == "VOIDED" else None
+
+    if next_status == "VERIFIED":
+        if old_data["status"] != "VERIFIED":
+            donation.verified_at = datetime.utcnow()
+            donation.verified_by = current_admin.id
+    else:
+        donation.verified_at = None
+        donation.verified_by = None
+
+    db.commit()
+    db.refresh(donation)
+
+    log_action(
+        db,
+        action="UPDATE",
+        entity_type="DONATION",
+        entity_id=donation.id,
+        user_id=current_admin.id,
+        old_data=old_data,
+        new_data=editable_donation_state(donation),
     )
     return donation
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal, Optional
 from datetime import date, datetime
 
 class DonationSubmit(BaseModel):
@@ -19,6 +19,18 @@ class DonationVoidRequest(BaseModel):
 
 class DonationVisibilityUpdate(BaseModel):
     show_donor_name: bool
+
+class DonationAdminUpdate(BaseModel):
+    donor_name: str = Field(..., min_length=1)
+    amount: float = Field(..., gt=0)
+    donation_date: date
+    payment_method: str = Field(..., min_length=1)
+    upi_transaction_id: Optional[str] = None
+    description: Optional[str] = None
+    status: Literal["PENDING", "VERIFIED", "REJECTED", "VOIDED"]
+    show_donor_name: bool
+    student_year: Optional[str] = None
+    void_reason: Optional[str] = None
 
 class PublicDonationResponse(BaseModel):
     id: int
