@@ -1,6 +1,6 @@
 from datetime import datetime
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -120,17 +120,22 @@ def root():
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 @app.api_route("/api/health", methods=["GET", "HEAD"])
-def health_check(db: Session = Depends(get_db)):
+def health_check(response: Response, db: Session = Depends(get_db)):
     try:
-        # Run lightweight SELECT 1 DB ping to keep both API & Database active
-        db.execute(text("SELECT 1"))
+        # Run a basic dummy SQL SELECT query and retrieve the scalar value to ensure the database connection is alive
+        db_query_result = db.execute(text("SELECT 1")).scalar()
         db_status = "connected"
     except Exception as e:
+        db_query_result = None
         db_status = f"error: {str(e)}"
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
     return {
         "status": "healthy" if db_status == "connected" else "degraded",
         "database": db_status,
+        "database_query": "SELECT 1",
+        "database_query_result": db_query_result,
         "timestamp": datetime.utcnow().isoformat(),
         "message": "Vinayaka Chavithi API and Database active"
     }
+

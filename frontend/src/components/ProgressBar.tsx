@@ -236,7 +236,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         {/* Animated Ganesha + Mooshika Mouse Runner Icon */}
         {showMooshika && (
           <div
-            className="absolute top-0 -translate-x-1/2 flex flex-col items-center transition-all duration-[2400ms] cubic-bezier(0.25,1,0.5,1) z-10"
+            className="absolute top-0 -translate-x-1/2 flex flex-col items-center transition-all duration-2400 cubic-bezier(0.25,1,0.5,1) z-10"
             style={{ left: `${runnerLeftPos}%` }}
           >
             {/* Golden Sparkle Trail behind Mooshika while running */}
@@ -274,7 +274,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         <div className="w-full h-4 sm:h-5 rounded-full bg-slate-950/90 p-1 border border-amber-500/30 relative overflow-hidden shadow-inner">
           {/* Animated Glow Fill Bar */}
           <div
-            className="h-full rounded-full transition-all duration-[2400ms] cubic-bezier(0.25,1,0.5,1) progress-bar-glow"
+            className="h-full rounded-full transition-all duration-2400 cubic-bezier(0.25,1,0.5,1) progress-bar-glow"
             style={{
               width: `${currentFillPercent}%`,
               background: getGradient()
