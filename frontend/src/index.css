@@ -85,6 +85,19 @@
   box-shadow: 0 0 15px rgba(255, 183, 3, 0.8), 0 0 30px rgba(251, 133, 0, 0.5);
 }
 
+@keyframes eventPromoCountdown {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.event-promo-countdown {
+  animation: eventPromoCountdown 15s linear forwards;
+}
+
 /* Diya Pulse Animation */
 @keyframes diyaGlow {
   0%, 100% {

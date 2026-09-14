@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -15,6 +15,7 @@ from app.schemas.event_schedule import (
 )
 from app.dependencies.auth import get_current_admin
 from app.services.audit_service import log_action
+from app.services.cloudinary_service import delete_event_photo, upload_event_photo
 
 router = APIRouter(tags=["Admin Event Schedules"])
 
@@ -35,6 +36,36 @@ def get_owned_schedule(db: Session, schedule_id: int, current_admin: User) -> Ev
     )
     if not schedule:
         raise HTTPException(status_code=404, detail="Schedule item not found")
+    return schedule
+
+
+@router.post("/api/admin/schedules/{schedule_id}/photo", response_model=EventScheduleResponse)
+def upload_schedule_photo(
+    schedule_id: int,
+    photo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin)
+):
+    schedule = get_owned_schedule(db, schedule_id, current_admin)
+    if not photo.content_type or not photo.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image files can be uploaded.")
+
+    uploaded = upload_event_photo(photo.file, photo.filename or "event-photo")
+    old_public_id = schedule.photo_public_id
+    schedule.photo_url = uploaded["url"]
+    schedule.photo_public_id = uploaded["public_id"]
+    db.commit()
+    db.refresh(schedule)
+    delete_event_photo(old_public_id)
+
+    log_action(
+        db,
+        action="UPDATE",
+        entity_type="EVENT_SCHEDULE",
+        entity_id=schedule.id,
+        user_id=current_admin.id,
+        new_data={"photo_url": schedule.photo_url},
+    )
     return schedule
 
 
@@ -71,6 +102,7 @@ def create_schedule_item(
         end_time=item_in.end_time.strip() if item_in.end_time and item_in.end_time.strip() else None,
         venue=item_in.venue.strip(),
         description=item_in.description.strip() if item_in.description and item_in.description.strip() else None,
+        registration_url=item_in.registration_url.strip() if item_in.registration_url and item_in.registration_url.strip() else None,
         is_highlighted=item_in.is_highlighted,
         order_index=item_in.order_index,
     )
@@ -120,6 +152,8 @@ def update_schedule_item(
         update_data["end_time"] = update_data["end_time"].strip() if update_data["end_time"] and update_data["end_time"].strip() else None
     if "description" in update_data:
         update_data["description"] = update_data["description"].strip() if update_data["description"] and update_data["description"].strip() else None
+    if "registration_url" in update_data:
+        update_data["registration_url"] = update_data["registration_url"].strip() if update_data["registration_url"] and update_data["registration_url"].strip() else None
 
     for key, value in update_data.items():
         setattr(schedule, key, value)
@@ -148,9 +182,11 @@ def delete_schedule_item(
     schedule = get_owned_schedule(db, schedule_id, current_admin)
     deleted_id = schedule.id
     title = schedule.title
+    photo_public_id = schedule.photo_public_id
 
     db.delete(schedule)
     db.commit()
+    delete_event_photo(photo_public_id)
 
     log_action(
         db,

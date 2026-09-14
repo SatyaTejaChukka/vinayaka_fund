@@ -5,7 +5,7 @@ import {
   Wallet, CheckCircle2, Clock, Layers, Calendar,
   Download, GraduationCap, Filter, Banknote,
   Search, ArrowUpDown, ChevronLeft, ChevronRight, X,
-  Percent, Users, Sparkles, Palette, Flame, Megaphone, MapPin, Award, Utensils, Waves
+  Percent, Users, Sparkles, Palette, Flame, Megaphone, MapPin, Award, Utensils, Waves, ExternalLink
 } from 'lucide-react';
 import { Navbar } from '../../components/Navbar';
 import { StatCard } from '../../components/StatCard';
@@ -19,7 +19,7 @@ import { TableSkeleton, CardSkeleton } from '../../components/LoadingSkeleton';
 import { EmptyState } from '../../components/EmptyState';
 import { useToast } from '../../context/ToastContext';
 import { exportToCsv, type CsvColumn } from '../../utils/csvExporter';
-import { publicApi } from '../../services/api';
+import { publicApi, resolveMediaUrl } from '../../services/api';
 import type { FundSummary, PublicDonation, PublicExpense, PublicSchedulePayload } from '../../types';
 
 const SCHEDULE_CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; badge: string }> = {
@@ -56,6 +56,8 @@ export const PublicFund: React.FC = () => {
   const [isDonateOpen, setIsDonateOpen] = useState<boolean>(false);
   const [isCashOpen, setIsCashOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
+  const [isEventPromoOpen, setIsEventPromoOpen] = useState<boolean>(false);
+  const [selectedEventImage, setSelectedEventImage] = useState<{ url: string; title: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
   const [selectedYear, setSelectedYear] = useState<string>('ALL_YEARS');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -110,6 +112,24 @@ export const PublicFund: React.FC = () => {
   useEffect(() => {
     fetchFundData();
   }, [slug]);
+
+  useEffect(() => {
+    const promoEvent = schedulePayload?.is_schedule_published
+      ? schedulePayload.events.find((event) => event.photo_url && event.registration_url)
+      : undefined;
+
+    if (!promoEvent) return;
+
+    const timer = window.setTimeout(() => setIsEventPromoOpen(true), 1000);
+    return () => window.clearTimeout(timer);
+  }, [schedulePayload]);
+
+  useEffect(() => {
+    if (!isEventPromoOpen) return;
+
+    const timer = window.setTimeout(() => setIsEventPromoOpen(false), 15000);
+    return () => window.clearTimeout(timer);
+  }, [isEventPromoOpen]);
 
   // Batch analytics computation for selected year
   const batchDonations = donations.filter((d) => {
@@ -484,6 +504,34 @@ export const PublicFund: React.FC = () => {
                         : 'border-slate-700/60 hover:border-amber-500/30'
                     }`}
                   >
+                    {event.photo_url && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const imageUrl = resolveMediaUrl(event.photo_url);
+                          if (imageUrl) setSelectedEventImage({ url: imageUrl, title: event.title });
+                        }}
+                        className="group block w-full cursor-zoom-in text-left"
+                        aria-label={`View full image for ${event.title}`}
+                      >
+                        <img
+                          src={resolveMediaUrl(event.photo_url)}
+                          alt={event.title}
+                          className="w-full aspect-video object-cover rounded-xl border border-slate-700 transition group-hover:border-amber-400 group-hover:brightness-110"
+                        />
+                      </button>
+                    )}
+                    {event.registration_url && (
+                      <a
+                        href={event.registration_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-extrabold text-slate-950 hover:bg-amber-300 transition"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Register for this event</span>
+                      </a>
+                    )}
                     <div className="space-y-2.5 min-w-0">
                       <div className="flex items-center justify-between gap-1.5 flex-wrap">
                         <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1 ${meta.badge}`}>
@@ -943,6 +991,90 @@ export const PublicFund: React.FC = () => {
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
       />
+
+      {isEventPromoOpen && (() => {
+        const promoEvent = schedulePayload?.events.find((event) => event.photo_url && event.registration_url);
+        if (!promoEvent) return null;
+
+        return (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md">
+            <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-400/50 bg-slate-950 shadow-2xl shadow-amber-950/40">
+              <div
+                role="progressbar"
+                aria-label="Popup closing countdown"
+                className="absolute left-0 right-0 top-0 z-20 h-1.5 bg-slate-700/80"
+              >
+                <div className="event-promo-countdown h-full bg-amber-400 progress-bar-glow" />
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEventPromoOpen(false)}
+                aria-label="Close event registration popup"
+                className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-slate-950/80 text-slate-200 transition hover:bg-slate-900 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <img
+                src={resolveMediaUrl(promoEvent.photo_url)}
+                alt={promoEvent.title}
+                className="w-full aspect-video object-cover"
+              />
+              <div className="space-y-4 p-5 sm:p-6">
+                <div>
+                  <p className="text-[11px] font-extrabold uppercase tracking-widest text-amber-300">Event Registration Open</p>
+                  <h2 className="mt-1 text-xl font-black text-white">{promoEvent.title}</h2>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                    Join this celebration event. Registration is available through the Google Form.
+                  </p>
+                </div>
+                <a
+                  href={promoEvent.registration_url || undefined}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setIsEventPromoOpen(false)}
+                  className="flex w-full items-center justify-center rounded-xl bg-amber-400 px-4 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300"
+                >
+                  Register Now
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setIsEventPromoOpen(false)}
+                  className="w-full text-xs font-bold text-slate-400 transition hover:text-white"
+                >
+                  Continue to transparency page
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {selectedEventImage && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm"
+          onClick={() => setSelectedEventImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedEventImage.title} full image`}
+        >
+          <div className="relative flex max-h-[92vh] max-w-6xl items-center justify-center">
+            <button
+              type="button"
+              onClick={() => setSelectedEventImage(null)}
+              aria-label="Close full event image"
+              className="absolute right-2 top-2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-slate-950/85 text-white transition hover:bg-slate-900 hover:text-amber-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img
+              src={selectedEventImage.url}
+              alt={selectedEventImage.title}
+              className="max-h-[92vh] max-w-full rounded-xl border border-amber-400/40 object-contain shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Custom Telugu Celebration Blessing Modal */}
       <CelebrationBlessingModal

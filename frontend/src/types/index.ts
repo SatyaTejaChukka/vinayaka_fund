@@ -26,6 +26,9 @@ export interface EventSchedule {
   end_time?: string | null;
   venue: string;
   description?: string | null;
+  registration_url?: string | null;
+  photo_url?: string | null;
+  photo_public_id?: string | null;
   is_highlighted: boolean;
   order_index: number;
   created_at: string;

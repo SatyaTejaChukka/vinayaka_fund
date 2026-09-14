@@ -10,6 +10,9 @@ class EventScheduleBase(BaseModel):
     end_time: Optional[str] = None
     venue: str
     description: Optional[str] = None
+    registration_url: Optional[str] = None
+    photo_url: Optional[str] = None
+    photo_public_id: Optional[str] = None
     is_highlighted: bool = False
     order_index: int = 0
 
@@ -24,6 +27,9 @@ class EventScheduleUpdate(BaseModel):
     end_time: Optional[str] = None
     venue: Optional[str] = None
     description: Optional[str] = None
+    registration_url: Optional[str] = None
+    photo_url: Optional[str] = None
+    photo_public_id: Optional[str] = None
     is_highlighted: Optional[bool] = None
     order_index: Optional[int] = None
 

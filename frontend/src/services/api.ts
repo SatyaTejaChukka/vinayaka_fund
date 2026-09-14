@@ -3,6 +3,11 @@ import type { FundConfig, FundSummary, PublicDonation, PublicExpense, AdminDonat
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
+export const resolveMediaUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
+  return url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+};
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -42,6 +47,8 @@ export const publicApi = {
     donation_date: string;
     upi_transaction_id: string;
     description?: string;
+    photo_url?: string | null;
+    photo_public_id?: string | null;
     show_donor_name: boolean;
     student_year?: string;
   }): Promise<PublicDonation> => {
@@ -200,6 +207,7 @@ export const adminApi = {
     end_time?: string;
     venue: string;
     description?: string;
+    registration_url?: string;
     is_highlighted: boolean;
     order_index: number;
   }): Promise<EventSchedule> => {
@@ -208,6 +216,14 @@ export const adminApi = {
   },
   updateSchedule: async (scheduleId: number, data: Partial<EventSchedule>): Promise<EventSchedule> => {
     const res = await api.put(`/api/admin/schedules/${scheduleId}`, data);
+    return res.data;
+  },
+  uploadSchedulePhoto: async (scheduleId: number, photo: File): Promise<EventSchedule> => {
+    const formData = new FormData();
+    formData.append('photo', photo);
+    const res = await api.post(`/api/admin/schedules/${scheduleId}/photo`, formData, {
+      headers: { 'Content-Type': undefined },
+    });
     return res.data;
   },
   deleteSchedule: async (scheduleId: number): Promise<{ message: string; id: number }> => {

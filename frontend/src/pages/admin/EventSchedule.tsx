@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { 
   Calendar, Sparkles, Clock, MapPin, PlusCircle, Trash2, Edit3, 
   CheckCircle2, Eye, EyeOff, Megaphone, Flame, Palette, Award, 
-  Utensils, Waves, Layers
+  Utensils, Waves, Layers, ImagePlus
 } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { EmptyState } from '../../components/EmptyState';
 import { TableSkeleton } from '../../components/LoadingSkeleton';
 import { useToast } from '../../context/ToastContext';
 import { useConfirm } from '../../context/ConfirmContext';
-import { adminApi } from '../../services/api';
+import { adminApi, resolveMediaUrl } from '../../services/api';
 import type { EventSchedule, FundConfig } from '../../types';
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; color: string; badge: string }> = {
@@ -52,8 +52,10 @@ export const AdminEventSchedule: React.FC = () => {
     end_time: '',
     venue: '',
     description: '',
+    registration_url: '',
     is_highlighted: false,
-    order_index: 0
+    order_index: 0,
+    photo: null as File | null
   });
 
   const loadData = async () => {
@@ -184,8 +186,10 @@ export const AdminEventSchedule: React.FC = () => {
       end_time: '',
       venue: '',
       description: '',
+      registration_url: '',
       is_highlighted: false,
-      order_index: schedules.length + 1
+      order_index: schedules.length + 1,
+      photo: null
     });
     setShowEventModal(true);
   };
@@ -200,8 +204,10 @@ export const AdminEventSchedule: React.FC = () => {
       end_time: event.end_time || '',
       venue: event.venue,
       description: event.description || '',
+      registration_url: event.registration_url || '',
       is_highlighted: event.is_highlighted,
-      order_index: event.order_index
+      order_index: event.order_index,
+      photo: null
     });
     setShowEventModal(true);
   };
@@ -212,9 +218,20 @@ export const AdminEventSchedule: React.FC = () => {
     try {
       const cleanEndTime = eventForm.end_time.trim() || null;
       const cleanDescription = eventForm.description.trim() || null;
+      const cleanRegistrationUrl = eventForm.registration_url.trim() || null;
+      if (cleanRegistrationUrl) {
+        try {
+          const parsedUrl = new URL(cleanRegistrationUrl);
+          if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Unsupported protocol');
+        } catch {
+          toast.error('Enter a valid Google Form URL beginning with https://');
+          return;
+        }
+      }
+      let savedEvent: EventSchedule;
 
       if (editingId) {
-        await adminApi.updateSchedule(editingId, {
+        savedEvent = await adminApi.updateSchedule(editingId, {
           title: eventForm.title.trim(),
           category: eventForm.category,
           event_date: eventForm.event_date.trim(),
@@ -222,12 +239,16 @@ export const AdminEventSchedule: React.FC = () => {
           end_time: cleanEndTime,
           venue: eventForm.venue.trim(),
           description: cleanDescription,
+          registration_url: cleanRegistrationUrl,
           is_highlighted: eventForm.is_highlighted,
           order_index: Number(eventForm.order_index) || 0
         });
+        if (eventForm.photo) {
+          savedEvent = await adminApi.uploadSchedulePhoto(savedEvent.id, eventForm.photo);
+        }
         toast.success(`Updated "${eventForm.title}"!`);
       } else {
-        await adminApi.createSchedule(fund.id, {
+        savedEvent = await adminApi.createSchedule(fund.id, {
           title: eventForm.title.trim(),
           category: eventForm.category,
           event_date: eventForm.event_date.trim(),
@@ -235,13 +256,19 @@ export const AdminEventSchedule: React.FC = () => {
           end_time: cleanEndTime || undefined,
           venue: eventForm.venue.trim(),
           description: cleanDescription || undefined,
+          registration_url: cleanRegistrationUrl || undefined,
           is_highlighted: eventForm.is_highlighted,
           order_index: Number(eventForm.order_index) || 0
         });
+        if (eventForm.photo) {
+          savedEvent = await adminApi.uploadSchedulePhoto(savedEvent.id, eventForm.photo);
+        }
         toast.success(`Added "${eventForm.title}" to schedule!`);
       }
+      setSchedules((prev) => editingId
+        ? prev.map((item) => item.id === savedEvent.id ? savedEvent : item)
+        : [...prev, savedEvent]);
       setShowEventModal(false);
-      loadData();
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || 'Failed to save schedule event.');
     }
@@ -262,6 +289,16 @@ export const AdminEventSchedule: React.FC = () => {
       setSchedules((prev) => prev.filter((s) => s.id !== id));
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || 'Failed to delete event.');
+    }
+  };
+
+  const handleUploadPhoto = async (eventId: number, file: File) => {
+    try {
+      const updated = await adminApi.uploadSchedulePhoto(eventId, file);
+      setSchedules((prev) => prev.map((item) => item.id === updated.id ? updated : item));
+      toast.success('Event photo uploaded.');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to upload event photo.');
     }
   };
 
@@ -495,6 +532,29 @@ export const AdminEventSchedule: React.FC = () => {
                         </div>
                       </div>
 
+                      {item.photo_url && (
+                        <img
+                          src={resolveMediaUrl(item.photo_url)}
+                          alt={item.title}
+                          className="w-full aspect-video object-cover rounded-xl border border-slate-700"
+                        />
+                      )}
+
+                      <label className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 cursor-pointer">
+                        <ImagePlus className="w-3.5 h-3.5" />
+                        <span>{item.photo_url ? 'Replace photo' : 'Add photo'}</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          className="sr-only"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void handleUploadPhoto(item.id, file);
+                            event.currentTarget.value = '';
+                          }}
+                        />
+                      </label>
+
                       {item.description && (
                         <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60 break-words">
                           {item.description}
@@ -636,6 +696,29 @@ export const AdminEventSchedule: React.FC = () => {
                   placeholder="Details, competition rules, registration link, or devotional schedule instructions..."
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
                 />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Google Form Registration Link (Optional)</label>
+                <input
+                  type="url"
+                  value={eventForm.registration_url}
+                  onChange={(e) => setEventForm({ ...eventForm, registration_url: e.target.value })}
+                  placeholder="https://forms.google.com/..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-amber-400"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">A Register button appears publicly when this link is provided.</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Event Photo (Optional)</label>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(e) => setEventForm({ ...eventForm, photo: e.target.files?.[0] || null })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-500/20 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-amber-300"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">JPG, PNG, WEBP, or GIF. The image will be stored on the backend.</p>
               </div>
 
               <div className="flex items-center gap-2 pt-1">

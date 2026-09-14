@@ -15,6 +15,9 @@ class EventSchedule(Base):
     end_time = Column(String, nullable=True)     # e.g., "11:30 AM"
     venue = Column(String, nullable=False)       # e.g., "Main Quadrangle / Campus Arena"
     description = Column(Text, nullable=True)    # e.g., "Inter-batch Rangoli competition. Theme: Ganesha & Nature."
+    registration_url = Column(String, nullable=True)
+    photo_url = Column(String, nullable=True)
+    photo_public_id = Column(String, nullable=True)
     is_highlighted = Column(Boolean, default=False, nullable=False)
     order_index = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

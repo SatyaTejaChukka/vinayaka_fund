@@ -1,6 +1,7 @@
 from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, Response, status
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -42,6 +43,10 @@ app = FastAPI(
     description="Vinayaka Chavithi Celebration Fund Transparency System API",
     version="1.0.0"
 )
+
+uploads_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # Enable CORS for local React development
 app.add_middleware(
