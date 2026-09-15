@@ -209,7 +209,7 @@ export const AdminExpenses: React.FC = () => {
         </div>
 
         {/* Filter Pills & Actions */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto pb-1 sm:pb-0">
           {['ALL', 'PENDING', 'SPENT', 'VOIDED'].map((filter) => (
             <button
               key={filter}
@@ -287,7 +287,7 @@ export const AdminExpenses: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[650px] text-left text-xs">
+            <table className="w-full min-w-[560px] sm:min-w-[650px] text-left text-xs">
               <thead className="bg-slate-900/90 border-b border-amber-500/20 text-slate-300 uppercase tracking-wider font-extrabold">
                 <tr>
                   <th className="p-4">Purpose</th>
@@ -330,10 +330,11 @@ export const AdminExpenses: React.FC = () => {
                       </span>
                     </td>
 
-                    <td className="p-4 text-right space-x-2">
+                    <td className="p-2 sm:p-4 text-right">
+                      <div className="flex flex-wrap justify-end gap-1.5">
                       <button
                         onClick={() => handleEditExpense(e)}
-                        className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 hover:bg-amber-500/30 text-[11px] transition active:scale-95 inline-flex items-center gap-1"
+                        className="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 hover:bg-amber-500/30 text-[10px] sm:text-[11px] whitespace-nowrap transition active:scale-95 inline-flex items-center gap-1"
                         title="Edit expense"
                       >
                         <Pencil className="w-3 h-3" />
@@ -343,7 +344,7 @@ export const AdminExpenses: React.FC = () => {
                       {e.status === 'PENDING' && (
                         <button
                           onClick={() => handleMarkSpent(e.id)}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px] transition active:scale-95"
+                          className="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 hover:bg-emerald-500/30 text-[10px] sm:text-[11px] whitespace-nowrap transition active:scale-95"
                         >
                           Mark Spent
                         </button>
@@ -352,17 +353,18 @@ export const AdminExpenses: React.FC = () => {
                       {e.status !== 'VOIDED' && (
                         <button
                           onClick={() => setVoidingId(e.id)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-800 text-rose-400 hover:bg-rose-500/20 border border-slate-700 text-[11px] font-bold transition active:scale-95"
+                          className="px-2 py-1 rounded-lg bg-slate-800 text-rose-400 hover:bg-rose-500/20 border border-slate-700 text-[10px] sm:text-[11px] whitespace-nowrap transition active:scale-95"
                         >
                           Void
                         </button>
                       )}
 
                       {e.status === 'VOIDED' && (
-                        <span className="text-[10px] text-rose-400 italic">
+                        <span className="inline-block max-w-[180px] break-words text-left text-[10px] text-rose-400 italic sm:text-right">
                           Reason: {e.void_reason || 'N/A'}
                         </span>
                       )}
+                      </div>
                     </td>
                   </tr>
                 ))}
