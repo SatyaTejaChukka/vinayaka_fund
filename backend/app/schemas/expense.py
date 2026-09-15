@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal, Optional
 from datetime import date, datetime
 
 class ExpenseCreate(BaseModel):
@@ -9,6 +9,15 @@ class ExpenseCreate(BaseModel):
     handled_by: str
     expense_date: date
     status: str = "SPENT"  # SPENT or PENDING
+
+class ExpenseUpdate(BaseModel):
+    amount: float = Field(..., gt=0)
+    purpose: str = Field(..., min_length=1)
+    description: Optional[str] = None
+    handled_by: str = Field(..., min_length=1)
+    expense_date: date
+    status: Literal["PENDING", "SPENT", "VOIDED"]
+    void_reason: Optional[str] = None
 
 class ExpenseVoidRequest(BaseModel):
     reason: str
