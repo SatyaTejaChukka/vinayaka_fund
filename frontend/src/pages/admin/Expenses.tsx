@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, PlusCircle, Download, RefreshCw, Layers } from 'lucide-react';
+import { Search, PlusCircle, Download, RefreshCw, Layers, Pencil } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { TableSkeleton } from '../../components/LoadingSkeleton';
 import { EmptyState } from '../../components/EmptyState';
@@ -22,6 +22,7 @@ export const AdminExpenses: React.FC = () => {
   const [showAddExpense, setShowAddExpense] = useState<boolean>(false);
   const [voidingId, setVoidingId] = useState<number | null>(null);
   const [voidReason, setVoidReason] = useState<string>('');
+  const [editingExpense, setEditingExpense] = useState<AdminExpense | null>(null);
 
   const [expForm, setExpForm] = useState({
     purpose: '',
@@ -29,7 +30,8 @@ export const AdminExpenses: React.FC = () => {
     handled_by: '',
     expense_date: new Date().toISOString().split('T')[0],
     description: '',
-    status: 'SPENT' as 'SPENT' | 'PENDING'
+    status: 'SPENT' as 'SPENT' | 'PENDING' | 'VOIDED',
+    void_reason: ''
   });
 
   const loadExpenses = async () => {
@@ -72,31 +74,67 @@ export const AdminExpenses: React.FC = () => {
     }
   };
 
-  const handleAddSubmit = async (e: React.FormEvent) => {
+  const resetExpenseForm = () => {
+    setExpForm({
+      purpose: '',
+      amount: '',
+      handled_by: '',
+      expense_date: new Date().toISOString().split('T')[0],
+      description: '',
+      status: 'SPENT',
+      void_reason: ''
+    });
+  };
+
+  const closeExpenseModal = () => {
+    setShowAddExpense(false);
+    setEditingExpense(null);
+    resetExpenseForm();
+  };
+
+  const handleEditExpense = (expense: AdminExpense) => {
+    setEditingExpense(expense);
+    setExpForm({
+      purpose: expense.purpose,
+      amount: String(expense.amount),
+      handled_by: expense.handled_by,
+      expense_date: expense.expense_date,
+      description: expense.description || '',
+      status: expense.status,
+      void_reason: expense.void_reason || ''
+    });
+    setShowAddExpense(true);
+  };
+
+  const handleExpenseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fund) return;
     try {
-      await adminApi.createExpense(fund.id, {
+      const payload = {
         purpose: expForm.purpose,
         amount: parseFloat(expForm.amount),
         handled_by: expForm.handled_by,
         expense_date: expForm.expense_date,
         description: expForm.description,
-        status: expForm.status
-      });
-      toast.success(`Recorded expense: ${expForm.purpose} (₹${parseFloat(expForm.amount).toLocaleString('en-IN')})`);
-      setShowAddExpense(false);
-      setExpForm({
-        purpose: '',
-        amount: '',
-        handled_by: '',
-        expense_date: new Date().toISOString().split('T')[0],
-        description: '',
-        status: 'SPENT'
-      });
+        status: expForm.status,
+        void_reason: expForm.status === 'VOIDED' ? expForm.void_reason : null
+      };
+
+      if (editingExpense) {
+        await adminApi.updateExpense(editingExpense.id, payload);
+        toast.success('Updated expense #' + editingExpense.id + '.');
+      } else {
+        await adminApi.createExpense(fund.id, {
+          ...payload,
+          status: expForm.status as 'SPENT' | 'PENDING'
+        });
+        toast.success('Recorded expense: ' + expForm.purpose + ' (₹' + parseFloat(expForm.amount).toLocaleString('en-IN') + ')');
+      }
+
+      closeExpenseModal();
       loadExpenses();
     } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Failed to record expense.');
+      toast.error(err?.response?.data?.detail || (editingExpense ? 'Failed to update expense.' : 'Failed to record expense.'));
     }
   };
 
@@ -293,6 +331,15 @@ export const AdminExpenses: React.FC = () => {
                     </td>
 
                     <td className="p-4 text-right space-x-2">
+                      <button
+                        onClick={() => handleEditExpense(e)}
+                        className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 hover:bg-amber-500/30 text-[11px] transition active:scale-95 inline-flex items-center gap-1"
+                        title="Edit expense"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        Edit
+                      </button>
+
                       {e.status === 'PENDING' && (
                         <button
                           onClick={() => handleMarkSpent(e.id)}
@@ -329,8 +376,8 @@ export const AdminExpenses: React.FC = () => {
       {showAddExpense && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-md festive-glass rounded-3xl border border-amber-500/30 p-6 text-white space-y-4 shadow-2xl">
-            <h3 className="text-lg font-bold text-rose-300">Record Celebration Expense</h3>
-            <form onSubmit={handleAddSubmit} className="space-y-3">
+            <h3 className="text-lg font-bold text-rose-300">{editingExpense ? 'Edit Expense #' + editingExpense.id : 'Record Celebration Expense'}</h3>
+            <form onSubmit={handleExpenseSubmit} className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">Expense Purpose *</label>
                 <input
@@ -371,13 +418,28 @@ export const AdminExpenses: React.FC = () => {
                 <label className="text-xs font-bold text-slate-300 block mb-1">Expense Status *</label>
                 <select
                   value={expForm.status}
-                  onChange={(e) => setExpForm({ ...expForm, status: e.target.value as 'SPENT' | 'PENDING' })}
+                  onChange={(e) => setExpForm({ ...expForm, status: e.target.value as 'SPENT' | 'PENDING' | 'VOIDED' })}
                   className="w-full px-3.5 pr-8 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400 custom-select cursor-pointer transition-all"
                 >
                   <option value="SPENT">SPENT (Payment Completed)</option>
                   <option value="PENDING">PENDING (Planned / Committed)</option>
+                  {editingExpense && <option value="VOIDED">VOIDED (Excluded from totals)</option>}
                 </select>
               </div>
+
+              {editingExpense && expForm.status === 'VOIDED' && (
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Void Reason *</label>
+                  <input
+                    type="text"
+                    required
+                    value={expForm.void_reason}
+                    onChange={(e) => setExpForm({ ...expForm, void_reason: e.target.value })}
+                    placeholder="Enter reason for voiding expense"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">Description / Bill Notes</label>
@@ -393,7 +455,7 @@ export const AdminExpenses: React.FC = () => {
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddExpense(false)}
+                  onClick={closeExpenseModal}
                   className="w-1/2 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition"
                 >
                   Cancel
@@ -402,7 +464,7 @@ export const AdminExpenses: React.FC = () => {
                   type="submit"
                   className="w-1/2 py-2.5 rounded-xl font-bold bg-rose-500 hover:bg-rose-600 text-white text-xs shadow-md transition active:scale-95"
                 >
-                  Save Expense
+                  {editingExpense ? 'Update Expense' : 'Save Expense'}
                 </button>
               </div>
             </form>
