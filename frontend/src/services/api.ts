@@ -183,6 +183,18 @@ export const adminApi = {
     const res = await api.post(`/api/admin/funds/${fundId}/expenses`, data);
     return res.data;
   },
+  updateExpense: async (expenseId: number, data: {
+    amount: number;
+    purpose: string;
+    description?: string | null;
+    handled_by: string;
+    expense_date: string;
+    status: AdminExpense['status'];
+    void_reason?: string | null;
+  }): Promise<AdminExpense> => {
+    const res = await api.put(`/api/admin/expenses/${expenseId}`, data);
+    return res.data;
+  },
   markExpenseSpent: async (expenseId: number): Promise<AdminExpense> => {
     const res = await api.post(`/api/admin/expenses/${expenseId}/mark-spent`);
     return res.data;
