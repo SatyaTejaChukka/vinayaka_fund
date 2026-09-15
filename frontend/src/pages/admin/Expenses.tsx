@@ -415,6 +415,17 @@ export const AdminExpenses: React.FC = () => {
               </div>
 
               <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Expense Date *</label>
+                <input
+                  type="date"
+                  required
+                  value={expForm.expense_date}
+                  onChange={(e) => setExpForm({ ...expForm, expense_date: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">Expense Status *</label>
                 <select
                   value={expForm.status}
