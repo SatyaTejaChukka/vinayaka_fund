@@ -110,7 +110,7 @@ export interface AdminExpense {
   updated_at: string;
   voided_at?: string;
   voided_by?: number;
-  void_reason?: string;
+  void_reason?: string | null;
 }
 
 export interface AuditLog {
