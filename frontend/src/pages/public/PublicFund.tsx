@@ -413,7 +413,13 @@ export const PublicFund: React.FC = () => {
               {formatINR(fund.total_spent)} spent from {formatINR(fund.total_collected)} collected
             </h3>
             <p className="text-xs text-slate-300">
-              Pending expense commitments of <strong className="text-purple-300 font-bold">{formatINR(fund.pending_expenses)}</strong> planned for festival immersion & sanitation.
+              {fund.pending_expenses > 0 ? (
+                <>
+                  Pending expense commitments of <strong className="text-purple-300 font-bold">{formatINR(fund.pending_expenses)}</strong> planned for upcoming expenses.
+                </>
+              ) : (
+                <>All recorded expenses are currently settled.</>
+              )}
             </p>
 
             {/* Thin Progress Bar */}
