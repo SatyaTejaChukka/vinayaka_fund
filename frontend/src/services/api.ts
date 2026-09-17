@@ -96,6 +96,7 @@ export const adminApi = {
     public_slug: string;
     description?: string;
     is_active?: boolean;
+    default_tab?: 'donations' | 'expenses';
   }): Promise<FundConfig> => {
     const res = await api.post('/api/admin/funds', data);
     return res.data;

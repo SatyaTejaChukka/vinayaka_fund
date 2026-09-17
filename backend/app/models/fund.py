@@ -22,6 +22,7 @@ class Fund(Base):
     is_banner_active = Column(Boolean, default=False, nullable=False)
     banner_headline = Column(String, nullable=True, default="✨ Festival Schedule & Competitions Announced!")
     banner_message = Column(String, nullable=True, default="🪔 Maha Ganapati Pooja at 9:00 AM | 🎨 Inter-Batch Rangoli Competition at 2:00 PM")
+    default_tab = Column(String, nullable=False, default="donations")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

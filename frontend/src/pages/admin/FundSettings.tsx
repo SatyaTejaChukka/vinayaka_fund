@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Save, CheckCircle2, Trash2, Copy, Check, AlertCircle, Loader2, Link2, ExternalLink } from 'lucide-react';
+import { Settings, Save, CheckCircle2, Trash2, Copy, Check, AlertCircle, Loader2, Link2, ExternalLink, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import { AdminLayout } from './AdminLayout';
 import { DetailSkeleton } from '../../components/LoadingSkeleton';
 import { useToast } from '../../context/ToastContext';
@@ -34,14 +34,24 @@ export const FundSettings: React.FC = () => {
   const [slugReason, setSlugReason] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string;
+    year: number;
+    target_amount: number;
+    upi_id: string;
+    upi_name: string;
+    public_slug: string;
+    description: string;
+    default_tab: 'donations' | 'expenses';
+  }>({
     name: '',
     year: new Date().getFullYear(),
     target_amount: 100000,
     upi_id: '',
     upi_name: '',
     public_slug: '',
-    description: ''
+    description: '',
+    default_tab: 'donations'
   });
 
   const debouncedSlug = useDebounce(form.public_slug, 600);
@@ -100,7 +110,8 @@ export const FundSettings: React.FC = () => {
         upi_id: data.upi_id,
         upi_name: data.upi_name,
         public_slug: data.public_slug,
-        description: data.description || ''
+        description: data.description || '',
+        default_tab: (data.default_tab as 'donations' | 'expenses') || 'donations'
       });
     } catch (err: any) {
       if (err?.response?.status === 404) {
@@ -113,7 +124,8 @@ export const FundSettings: React.FC = () => {
           upi_id: 'vinayaka@upi',
           upi_name: 'Vinayaka Chavithi Committee',
           public_slug: 'vinayaka-chavithi-2026',
-          description: ''
+          description: '',
+          default_tab: 'donations'
         });
       } else {
         toast.error('Failed to load fund settings from server');
@@ -151,7 +163,8 @@ export const FundSettings: React.FC = () => {
           upi_id: form.upi_id,
           upi_name: form.upi_name,
           public_slug: form.public_slug,
-          description: form.description
+          description: form.description,
+          default_tab: form.default_tab
         });
         toast.success('Fund settings updated successfully!');
       } else {
@@ -163,7 +176,8 @@ export const FundSettings: React.FC = () => {
           upi_name: form.upi_name,
           public_slug: form.public_slug,
           description: form.description,
-          is_active: true
+          is_active: true,
+          default_tab: form.default_tab
         });
         toast.success('Fund created! Your public transparency page is now live.');
       }
@@ -405,6 +419,67 @@ export const FundSettings: React.FC = () => {
                   placeholder="ECE Department Committee"
                   className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-amber-500/40 text-sm focus:outline-none focus:border-amber-400 transition text-white"
                 />
+              </div>
+            </div>
+
+            {/* Default Public View Tab Selection */}
+            <div>
+              <label className="text-xs font-bold text-slate-300 block mb-1">
+                Default Public View Tab *
+              </label>
+              <p className="text-[11px] text-slate-400 mb-2.5">
+                Choose which register donors and visitors see first when opening your public transparency link.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, default_tab: 'donations' })}
+                  className={`p-3.5 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
+                    form.default_tab === 'donations'
+                      ? 'bg-amber-500/15 border-amber-400 text-white shadow-lg ring-1 ring-amber-400/40'
+                      : 'bg-slate-900/80 border-slate-700/80 text-slate-300 hover:border-slate-600'
+                  }`}
+                >
+                  <div className={`p-2 rounded-xl shrink-0 ${form.default_tab === 'donations' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-emerald-400'}`}>
+                    <ArrowDownLeft className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>Donations Tab First</span>
+                      {form.default_tab === 'donations' && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/30 text-amber-300 font-extrabold">Active</span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      Shows donor names and collection progress by default. Ideal during fund collection phase.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, default_tab: 'expenses' })}
+                  className={`p-3.5 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
+                    form.default_tab === 'expenses'
+                      ? 'bg-rose-500/15 border-rose-400 text-white shadow-lg ring-1 ring-rose-400/40'
+                      : 'bg-slate-900/80 border-slate-700/80 text-slate-300 hover:border-slate-600'
+                  }`}
+                >
+                  <div className={`p-2 rounded-xl shrink-0 ${form.default_tab === 'expenses' ? 'bg-rose-500 text-white' : 'bg-slate-800 text-rose-400'}`}>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>Expenses Tab First</span>
+                      {form.default_tab === 'expenses' && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-500/30 text-rose-300 font-extrabold">Active</span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      Shows itemized expenses and bills by default. Ideal during festival spending phase.
+                    </p>
+                  </div>
+                </button>
               </div>
             </div>
 

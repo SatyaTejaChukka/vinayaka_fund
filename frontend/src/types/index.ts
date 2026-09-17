@@ -14,6 +14,7 @@ export interface FundConfig {
   is_banner_active?: boolean;
   banner_headline?: string;
   banner_message?: string;
+  default_tab?: 'donations' | 'expenses';
 }
 
 export interface EventSchedule {

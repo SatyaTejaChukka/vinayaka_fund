@@ -17,6 +17,7 @@ class FundBase(BaseModel):
     is_banner_active: bool = False
     banner_headline: Optional[str] = "✨ Festival Schedule & Competitions Announced!"
     banner_message: Optional[str] = "🪔 Maha Ganapati Pooja at 9:00 AM | 🎨 Inter-Batch Rangoli Competition at 2:00 PM"
+    default_tab: Optional[str] = "donations"
 
 class FundCreate(FundBase):
     pass
@@ -36,6 +37,7 @@ class FundUpdate(BaseModel):
     is_banner_active: Optional[bool] = None
     banner_headline: Optional[str] = None
     banner_message: Optional[str] = None
+    default_tab: Optional[str] = None
 
 class FundResponse(FundBase):
     id: int

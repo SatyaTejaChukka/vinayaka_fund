@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   Heart, ArrowUpRight, ArrowDownLeft, 
@@ -39,6 +39,8 @@ const PUBLIC_ACADEMIC_YEARS = [
   '2nd Year (II)',
   '3rd Year (III)',
   '4th Year (IV)',
+  'Faculty',
+  'Alumni',
   'Other / General'
 ];
 
@@ -59,6 +61,7 @@ export const PublicFund: React.FC = () => {
   const [isEventPromoOpen, setIsEventPromoOpen] = useState<boolean>(false);
   const [selectedEventImage, setSelectedEventImage] = useState<{ url: string; title: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
+  const userSelectedTab = useRef<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string>('ALL_YEARS');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_high'>('newest');
@@ -98,6 +101,9 @@ export const PublicFund: React.FC = () => {
         publicApi.getPublicSchedule(slug).catch(() => null)
       ]);
       setFund(summaryRes);
+      if (!userSelectedTab.current && summaryRes.default_tab) {
+        setActiveTab((summaryRes.default_tab as 'donations' | 'expenses') || 'donations');
+      }
       setDonations(donRes);
       setExpenses(expRes);
       if (schedRes) setSchedulePayload(schedRes);
@@ -596,7 +602,10 @@ export const PublicFund: React.FC = () => {
             {/* Segmented Tab Controls (Donations & Expenses) */}
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2 sm:flex sm:items-center w-full sm:w-auto p-1 rounded-2xl bg-slate-950/60 border border-amber-500/20">
               <button
-                onClick={() => setActiveTab('donations')}
+                onClick={() => {
+                  userSelectedTab.current = true;
+                  setActiveTab('donations');
+                }}
                 className={`py-2 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 ${
                   activeTab === 'donations'
                     ? 'gold-button text-amber-950 shadow-md'
@@ -613,7 +622,10 @@ export const PublicFund: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setActiveTab('expenses')}
+                onClick={() => {
+                  userSelectedTab.current = true;
+                  setActiveTab('expenses');
+                }}
                 className={`py-2 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 ${
                   activeTab === 'expenses'
                     ? 'gold-button text-amber-950 shadow-md'

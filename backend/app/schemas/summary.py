@@ -23,3 +23,4 @@ class PublicFundSummary(BaseModel):
     start_date: Optional[date]
     end_date: Optional[date]
     is_active: bool
+    default_tab: str = "donations"

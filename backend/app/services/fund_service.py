@@ -69,5 +69,6 @@ def calculate_fund_summary(db: Session, fund: Fund) -> PublicFundSummary:
         public_slug=fund.public_slug,
         start_date=fund.start_date,
         end_date=fund.end_date,
-        is_active=fund.is_active
+        is_active=fund.is_active,
+        default_tab=getattr(fund, "default_tab", "donations") or "donations"
     )
